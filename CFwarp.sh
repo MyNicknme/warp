@@ -16,7 +16,7 @@ bblue(){ echo -e "\033[34m\033[01m$1\033[0m";}
 rred(){ echo -e "\033[35m\033[01m$1\033[0m";}
 readtp(){ read -t5 -n26 -p "$(yellow "$1")" $2;}
 readp(){ read -p "$(yellow "$1")" $2;}
-[[ $EUID -ne 0 ]] && yellow "Запускайте скрипт от имени root" && exit
+[[ $EUID -ne 0 ]] && yellow "Пожалуйста, запустите скрипт от root" && exit
 #[[ -e /etc/hosts ]] && grep -qE '^ *172.65.251.78 gitlab.com' /etc/hosts || echo -e '\n172.65.251.78 gitlab.com' >> /etc/hosts
 if [[ -f /etc/redhat-release ]]; then
 release="Centos"
@@ -49,7 +49,7 @@ cpujg(){
 case $(uname -m) in
 aarch64) cpu=arm64;;
 x86_64) cpu=amd64;;
-*) red "Скрипт не поддерживает архитектуру $(uname -m)" && exit;;
+*) red "Скрипт пока не поддерживает архитектуру $(uname -m)" && exit;;
 esac
 }
 
@@ -58,15 +58,15 @@ insV=$(cat /root/warpip/v 2>/dev/null)
 latestV=$(curl -sL https://raw.githubusercontent.com/yonggekkk/warp-yg/main/version | awk -F "更新内容" '{print $1}' | head -n 1)
 if [[ -f /root/warpip/v ]]; then
 if [ "$insV" = "$latestV" ]; then
-echo -e " Текущая версия скрипта CFwarp-yg: ${bblue}${insV}${plain} (Последняя)"
+echo -e " Текущая версия скрипта CFwarp-yg: ${bblue}${insV}${plain} уже является последней"
 else
 echo -e " Текущая версия скрипта CFwarp-yg: ${bblue}${insV}${plain}"
-echo -e " Обнаружена новая версия CFwarp-yg: ${yellow}${latestV}${plain} (Выберите пункт 8 для обновления)"
+echo -e " Обнаружена новая версия скрипта CFwarp-yg: ${yellow}${latestV}${plain} (можно выбрать 8 для обновления)"
 echo -e "${yellow}$(curl -sL https://raw.githubusercontent.com/yonggekkk/warp-yg/main/version)${plain}"
 fi
 else
 echo -e " Текущая версия скрипта CFwarp-yg: ${bblue}${latestV}${plain}"
-echo -e " Пожалуйста, выберите вариант (1, 2, 3) для установки WARP"
+echo -e " Сначала выберите вариант (1, 2, 3), чтобы установить нужный режим warp"
 fi
 }
 
@@ -74,15 +74,15 @@ tun(){
 if [[ $vi = openvz ]]; then
 TUN=$(cat /dev/net/tun 2>&1)
 if [[ ! $TUN =~ 'in bad state' ]] && [[ ! $TUN =~ '处于错误状态' ]] && [[ ! $TUN =~ 'Die Dateizugriffsnummer ist in schlechter Verfassung' ]]; then 
-red "TUN не включен, попытка включить TUN..." && sleep 4
+red "Обнаружено, что TUN не включен, сейчас будет попытка добавить поддержку TUN" && sleep 4
 cd /dev && mkdir net && mknod net/tun c 10 200 && chmod 0666 net/tun
 TUN=$(cat /dev/net/tun 2>&1)
 if [[ ! $TUN =~ 'in bad state' ]] && [[ ! $TUN =~ '处于错误状态' ]] && [[ ! $TUN =~ 'Die Dateizugriffsnummer ist in schlechter Verfassung' ]]; then 
-green "Не удалось включить TUN. Обратитесь к провайдеру VPS или включите в панели управления." && exit
+green "Не удалось добавить поддержку TUN, рекомендуется связаться с провайдером VPS или включить в панели управления" && exit
 else
 echo '#!/bin/bash' > /root/tun.sh && echo 'cd /dev && mkdir net && mknod net/tun c 10 200 && chmod 0666 net/tun' >> /root/tun.sh && chmod +x /root/tun.sh
 grep -qE "^ *@reboot root bash /root/tun.sh >/dev/null 2>&1" /etc/crontab || echo "@reboot root bash /root/tun.sh >/dev/null 2>&1" >> /etc/crontab
-green "Функция защиты TUN запущена"
+green "Функция поддержания TUN уже запущена"
 fi
 fi
 fi
@@ -92,13 +92,13 @@ nf4(){
 UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36"
 result=$(curl -4fsL --user-agent "${UA_Browser}" --write-out %{http_code} --output /dev/null --max-time 10 "https://www.netflix.com/title/70143836" 2>&1)
 if [[ "$result" == "404" ]]; then 
-NF="Жаль, IP разблокирует только Netflix Originals"
+NF="К сожалению, текущий IP открывает только Netflix Originals"
 elif [[ "$result" == "403" ]]; then
-NF="Печально, Netflix не работает на этом IP"
+NF="Печально, текущий IP не может смотреть Netflix"
 elif [[ "$result" == "200" ]]; then
-NF="Поздравляем, IP полностью разблокирует Netflix"
+NF="Поздравляем, текущий IP полностью открывает Netflix, включая неоригинальный контент"
 else
-NF="Увы, Netflix не обслуживает этот регион"
+NF="Смиритесь, Netflix не обслуживает регион текущего IP"
 fi
 }
 
@@ -106,13 +106,13 @@ nf6(){
 UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36"
 result=$(curl -6fsL --user-agent "${UA_Browser}" --write-out %{http_code} --output /dev/null --max-time 10 "https://www.netflix.com/title/70143836" 2>&1)
 if [[ "$result" == "404" ]]; then 
-NF="Жаль, IP разблокирует только Netflix Originals"
+NF="К сожалению, текущий IP открывает только Netflix Originals"
 elif [[ "$result" == "403" ]]; then
-NF="Печально, Netflix не работает на этом IP"
+NF="Печально, текущий IP не может смотреть Netflix"
 elif [[ "$result" == "200" ]]; then
-NF="Поздравляем, IP полностью разблокирует Netflix"
+NF="Поздравляем, текущий IP полностью открывает Netflix, включая неоригинальный контент"
 else
-NF="Увы, Netflix не обслуживает этот регион"
+NF="Смиритесь, Netflix не обслуживает регион текущего IP"
 fi
 }
 
@@ -120,13 +120,13 @@ nfs5() {
 UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36"
 result=$(curl --user-agent "${UA_Browser}" --write-out %{http_code} --output /dev/null --max-time 10 -sx socks5h://localhost:$mport -4sL "https://www.netflix.com/title/70143836" 2>&1)
 if [[ "$result" == "404" ]]; then 
-NF="Жаль, IP разблокирует только Netflix Originals"
+NF="К сожалению, текущий IP открывает только Netflix Originals"
 elif [[ "$result" == "403" ]]; then
-NF="Печально, Netflix не работает на этом IP"
+NF="Печально, текущий IP не может смотреть Netflix"
 elif [[ "$result" == "200" ]]; then
-NF="Поздравляем, IP полностью разблокирует Netflix"
+NF="Поздравляем, текущий IP полностью открывает Netflix, включая неоригинальный контент"
 else
-NF="Увы, Netflix не обслуживает этот регион"
+NF="Смиритесь, Netflix не обслуживает регион текущего IP"
 fi
 }
 
@@ -158,7 +158,7 @@ fi
 
 mtuwarp(){
 v4v6
-yellow "Автоматическая настройка MTU для оптимизации WARP!"
+yellow "Начинается автоматическая настройка оптимального значения MTU для лучшей пропускной способности сети WARP!"
 MTUy=1500
 MTUc=10
 if [[ -n $v6 && -z $v4 ]]; then
@@ -219,55 +219,55 @@ while [ $i -le 4 ]; do let i++
 warpopen
 checkwgcf
 if [[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]]; then
-green "WARP успешно получил IP после прерывания!" 
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] WARP успешно получил IP после прерывания!" >> /root/warpip/warp_log.txt
+green "После сбоя попытка получить IP warp прошла успешно!" 
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] После сбоя попытка получить IP warp прошла успешно!" >> /root/warpip/warp_log.txt
 break
 else 
-red "WARP не смог получить IP после прерывания!"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] WARP не смог получить IP после прерывания!" >> /root/warpip/warp_log.txt
+red "После сбоя попытка получить IP warp не удалась!"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] После сбоя попытка получить IP warp не удалась!" >> /root/warpip/warp_log.txt
 fi
 done
 checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 warpclose
-red "После 5 попыток не удалось получить IP WARP, WARP остановлен, VPS возвращен к исходному IP"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] После 5 попыток не удалось получить IP WARP, WARP остановлен, VPS возвращен к исходному IP" >> /root/warpip/warp_log.txt
+red "После 5 неудачных попыток получить IP warp выполняется остановка и отключение warp, VPS возвращается к исходному IP"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] После 5 неудачных попыток получить IP warp выполняется остановка и отключение warp, VPS возвращается к исходному IP" >> /root/warpip/warp_log.txt
 fi
 }
 while true; do
-green "Проверка работы WARP..."
+green "Проверка, запущен ли warp…………"
 wp=$(cat /root/warpip/wp.log)
 if [[ $wp = w4 ]]; then
 checkwgcf
 if [[ $wgcfv4 =~ on|plus ]]; then
-green "Успех! WARP IPV4 работает! Следующая проверка через 600 сек"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Успех！WARP IPV4 работает! Следующая проверка через 600 сек" >> /root/warpip/warp_log.txt
+green "Поздравляем! WARP IPV4 работает! Следующая проверка будет автоматически выполнена через 600 секунд"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Поздравляем! WARP IPV4 работает! Следующая проверка будет автоматически выполнена через 600 секунд" >> /root/warpip/warp_log.txt
 sleep 600s
 else
-warpre ; green "Следующая проверка через 500 сек"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Следующая проверка через 500 сек" >> /root/warpip/warp_log.txt
+warpre ; green "Следующая проверка будет автоматически выполнена через 500 секунд"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Следующая проверка будет автоматически выполнена через 500 секунд" >> /root/warpip/warp_log.txt
 sleep 500s
 fi
 elif [[ $wp = w6 ]]; then
 checkwgcf
 if [[ $wgcfv6 =~ on|plus ]]; then
-green "Успех! WARP IPV6 работает! Следующая проверка через 600 сек"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Успех！WARP IPV6 работает! Следующая проверка через 600 сек" >> /root/warpip/warp_log.txt
+green "Поздравляем! WARP IPV6 работает! Следующая проверка будет автоматически выполнена через 600 секунд"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Поздравляем! WARP IPV6 работает! Следующая проверка будет автоматически выполнена через 600 секунд" >> /root/warpip/warp_log.txt
 sleep 600s
 else
-warpre ; green "Следующая проверка через 500 сек"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Следующая проверка через 500 сек" >> /root/warpip/warp_log.txt
+warpre ; green "Следующая проверка будет автоматически выполнена через 500 секунд"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Следующая проверка будет автоматически выполнена через 500 секунд" >> /root/warpip/warp_log.txt
 sleep 500s
 fi
 else
 checkwgcf
 if [[ $wgcfv4 =~ on|plus && $wgcfv6 =~ on|plus ]]; then
-green "Успех! WARP IPV4+IPV6 работает! Следующая проверка через 600 сек"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Успех！WARP IPV4+IPV6 работает! Следующая проверка через 600 сек" >> /root/warpip/warp_log.txt
+green "Поздравляем! WARP IPV4+IPV6 работает! Следующая проверка будет автоматически выполнена через 600 секунд"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Поздравляем! WARP IPV4+IPV6 работает! Следующая проверка будет автоматически выполнена через 600 секунд" >> /root/warpip/warp_log.txt
 sleep 600s
 else
-warpre ; green "Следующая проверка через 500 сек"
-echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Следующая проверка через 500 сек" >> /root/warpip/warp_log.txt
+warpre ; green "Следующая проверка будет автоматически выполнена через 500 секунд"
+echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] Следующая проверка будет автоматически выполнена через 500 секунд" >> /root/warpip/warp_log.txt
 sleep 500s
 fi
 fi
@@ -282,14 +282,14 @@ first4(){
 
 docker(){
 if [[ -n $(ip a | grep docker) ]]; then
-red "Обнаружен Docker. Убедитесь, что Docker работает в режиме host, иначе он перестанет работать." && sleep 3s
+red "Обнаружено, что на VPS уже установлен docker. Убедитесь, что docker работает в режиме host, иначе docker перестанет работать" && sleep 3s
 echo
-yellow "Установка WARP (Вариант 1) продолжится через 6 секунд. Ctrl+c для отмены." && sleep 6s
+yellow "Через 6 секунд продолжится установка WARP по варианту 1, для выхода нажмите Ctrl+c" && sleep 6s
 fi
 }
 
 lncf(){
-curl -sSL -o /usr/bin/cf -L https://raw.githubusercontent.com/MyNicknme/warp/refs/heads/main/CFwarp.sh
+curl -sSL -o /usr/bin/cf -L https://raw.githubusercontent.com/yonggekkk/warp-yg/main/CFwarp.sh
 chmod +x /usr/bin/cf
 }
 
@@ -299,7 +299,7 @@ red "Скрипт CFwarp установлен некорректно!" && exit
 fi
 lncf
 curl -sL https://raw.githubusercontent.com/yonggekkk/warp-yg/main/version | awk -F "更新内容" '{print $1}' | head -n 1 > /root/warpip/v
-green "Скрипт CFwarp успешно обновлен" && cf
+green "Скрипт CFwarp успешно обновлён" && cf
 }
 
 restwarpgo(){
@@ -323,11 +323,11 @@ $yumapt autoremove
 }
 
 WARPun(){
-readp "1. Удалить только Вариант 1 (WARP)\n2. Удалить только Вариант 2 (Socks5-WARP)\n3. Полное удаление и очистка (Варианты 1+2)\n Выберите：" cd
+readp "1. Удалить только WARP из варианта 1\n2. Удалить только Socks5-WARP из варианта 2\n3. Полностью очистить и удалить все связанные с WARP варианты (1+2)\n Выберите:" cd
 case "$cd" in
-1 ) cwg && green "WARP удален";;
-2 ) cso && green "Socks5-warp удален";;
-3 ) cwg && cso && unreswarp && green "WARP и Socks5-WARP полностью удалены" && rm -rf /usr/bin/cf warp_update
+1 ) cwg && green "warp удалён";;
+2 ) cso && green "socks5-warp удалён";;
+3 ) cwg && cso && unreswarp && green "warp и socks5-warp полностью удалены" && rm -rf /usr/bin/cf warp_update
 esac
 }
 
@@ -341,57 +341,57 @@ fi
 chmod +x warpplus.sh
 timeout 60s ./warpplus.sh
 }
-green "1. Мониторинг WARP в реальном времени (Выход и продолжение: ctrl+a+d, Выход и закрытие: ctrl+c)"
-green "2. Перезапуск мониторинга WARP"
-green "3. Сброс и настройка интервала мониторинга WARP"
-green "4. Просмотр логов мониторинга WARP за сегодня"
+green "1. Просмотр онлайн-мониторинга WARP в реальном времени (перед входом учтите: выйти и оставить мониторинг работать: ctrl+a+d, выйти и остановить мониторинг: ctrl+c )"
+green "2. Перезапустить функцию онлайн-мониторинга WARP"
+green "3. Сбросить и настроить пользовательский интервал онлайн-мониторинга WARP"
+green "4. Просмотреть сегодняшний журнал онлайн-мониторинга WARP"
 echo "-----------------------------------------------"
 green "5. Изменить порт Socks5+WARP"
 echo "-----------------------------------------------"
-green "6. Накрутка трафика WARP+ (медленно, свой ключ)"
-green "7. Генерация ключа WARP+ с 20 млн GB трафика"
+green "6. Использовать свой warp-ключ для постепенного накручивания трафика warp+"
+green "7. В один клик сгенерировать warp+ ключ с трафиком более 20 миллионов GB"
 echo "-----------------------------------------------"
 green "0. Выход"
-readp "Выберите：" warptools
+readp "Выберите:" warptools
 if [[ $warptools == 1 ]]; then
-[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, выход" && exit
+[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, скрипт завершает работу" && exit
 name=`screen -ls | grep '(Detached)' | awk '{print $1}' | awk -F "." '{print $2}'`
 if [[ $name =~ "up" ]]; then
 screen -Ur up
 else
-red "Мониторинг WARP не запущен, выберите 2 для запуска" && WARPtools
+red "Функция мониторинга WARP не запущена, выберите 2 для перезапуска" && WARPtools
 fi
 elif [[ $warptools == 2 ]]; then
-[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, выход" && exit
+[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, скрипт завершает работу" && exit
 xyz
 name=`screen -ls | grep '(Detached)' | awk '{print $1}' | awk -F "." '{print $2}'`
-[[ $name =~ "up" ]] && green "Мониторинг WARP успешно запущен" || red "Ошибка запуска мониторинга WARP, проверьте screen"
+[[ $name =~ "up" ]] && green "Онлайн-мониторинг WARP успешно запущен" || red "Не удалось запустить онлайн-мониторинг WARP, проверьте, установлен ли screen"
 elif [[ $warptools == 3 ]]; then
-[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, выход" && exit
+[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, скрипт завершает работу" && exit
 xyz
-readp "Интервал проверки, когда WARP работает (Enter = 600 сек). Введите время (напр. 50):" stop
-[[ -n $stop ]] && sed -i "s/600s/${stop}s/g;s/600秒/${stop}秒/g" /root/WARP-UP.sh || green "По умолчанию 600 сек"
-readp "Интервал проверки, когда WARP прерван (5 неудач = откл WARP). (Enter = 500 сек). Введите время (напр. 50):" goon
-[[ -n $goon ]] && sed -i "s/500s/${goon}s/g;s/500秒/${goon}秒/g" /root/WARP-UP.sh || green "По умолчанию 500 сек"
+readp "Когда warp работает, интервал повторной проверки состояния warp (Enter по умолчанию 600 секунд), введите интервал (например: 50 секунд, введите 50):" stop
+[[ -n $stop ]] && sed -i "s/600s/${stop}s/g;s/600秒/${stop}秒/g" /root/WARP-UP.sh || green "Интервал по умолчанию 600 секунд"
+readp "Когда warp прерван (после 5 подряд неудач warp автоматически отключается и VPS возвращается к исходному IP), интервал продолжения проверки состояния WARP (Enter по умолчанию 500 секунд), введите интервал (например: 50 секунд, введите 50):" goon
+[[ -n $goon ]] && sed -i "s/500s/${goon}s/g;s/500秒/${goon}秒/g" /root/WARP-UP.sh || green "Интервал по умолчанию 500 секунд"
 [[ -e /root/WARP-UP.sh ]] && screen -ls | awk '/\.up/ {print $1}' | cut -d "." -f 1 | xargs kill 2>/dev/null ; screen -UdmS up bash -c '/bin/bash /root/WARP-UP.sh'
-green "Настройка завершена, проверьте в пункте 1"
+green "Настройка завершена, интервал мониторинга можно посмотреть в пункте 1"
 elif [[ $warptools == 4 ]]; then
-[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, выход" && exit
+[[ -z $(type -P warp-go) && -z $(type -P wg-quick) ]] && red "Вариант 1 не установлен, скрипт завершает работу" && exit
 cat /root/warpip/warp_log.txt
 # find /root/warpip/warp_log.txt -mtime -1 -exec cat {} \;
 elif [[ $warptools == 6 ]]; then
-green "Также можно накрутить онлайн: https://replit.com/@ygkkkk/Warp" && sleep 2
+green "Также можно накручивать через веб-страницу: https://replit.com/@ygkkkk/Warp" && sleep 2
 wget -N https://gitlab.com/rwkgyg/CFwarp/raw/main/wp-plus.py 
 sed -i "27 s/[(][^)]*[)]//g" wp-plus.py
-readp "ID клиента (36 символов):" ID
+readp "ID конфигурации клиента (36 символов):" ID
 sed -i "27 s/input/'$ID'/" wp-plus.py
 python3 wp-plus.py
 elif [[ $warptools == 5 ]]; then
 SOCKS5WARPPORT
 elif [[ $warptools == 7 ]]; then
 wppluskey && rm -rf warpplus.sh
-green "Сгенерированный ключ WARP+ сохранен в файле /root/WARP+Keys.txt"
-green "Новые ключи добавляются в конец файла"
+green "Все warp+ ключи, сгенерированные этим скриптом, сохранены в файле /root/WARP+Keys.txt"
+green "Каждый новый ключ при повторном запуске будет добавлен в конец файла (включая вариант 1 и вариант 2)"
 blue "$(cat /root/WARP+Keys.txt)"
 echo
 else
@@ -410,14 +410,14 @@ gpt2=$(curl -s6 https://ios.chat.openai.com 2>&1)
 checkgpt(){
 #if [[ $gpt1 == *location* ]]; then
 if [[ $gpt2 == *VPN* ]]; then
-chat='Жаль, IP разблокирует только Web ChatGPT'
+chat='К сожалению, текущий IP открывает только веб-версию ChatGPT, клиент не открыт'
 elif [[ $gpt2 == *Request* ]]; then
-chat='Поздравляем, IP полностью разблокирует ChatGPT (Web+App)'
+chat='Поздравляем, текущий IP полностью открывает ChatGPT (веб + клиент)'
 else
-chat='Печально, IP не разблокирует ChatGPT'
+chat='Печально, текущий IP не может открыть сервис ChatGPT'
 fi
 #else
-#chat='Печально, IP не разблокирует ChatGPT'
+#chat='杯具，当前IP无法解锁ChatGPT服务'
 #fi
 }
 
@@ -437,25 +437,25 @@ country=$nonf
 socks5=$(curl -sx socks5h://localhost:$mport www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 2 | grep warp | cut -d= -f2) 
 case ${socks5} in 
 plus) 
-S5Status=$(white "Статус Socks5 WARP+:\c" ; rred "Работает, WARP+ (Остаток трафика: $((`warp-cli --accept-tos account | grep Quota | awk '{ print $(NF) }'`/1000000000)) GB)" ; white " Порт Socks5: \c" ; rred "$mport" ; white " IP от Cloudflare: \c" ; rred "$s5ip  $country" ; white " Netflix: \c" ; rred "$NF" ; white " ChatGPT: \c" ; rred "$chat");;  
+S5Status=$(white "Состояние Socks5 WARP+：\c" ; rred "работает, аккаунт WARP+ (остаток трафика WARP+: $((`warp-cli --accept-tos account | grep Quota | awk '{ print $(NF) }'`/1000000000)) GB)" ; white " Порт Socks5：\c" ; rred "$mport" ; white " Провайдер Cloudflare выдал IPv4-адрес：\c" ; rred "$s5ip  $country" ; white " Статус разблокировки Netflix NF：\c" ; rred "$NF" ; white " Статус разблокировки ChatGPT：\c" ; rred "$chat");;  
 on) 
-S5Status=$(white "Статус Socks5 WARP:\c" ; green "Работает, WARP Free (Безлимит)" ; white " Порт Socks5: \c" ; green "$mport" ; white " IP от Cloudflare: \c" ; green "$s5ip  $country" ; white " Netflix: \c" ; green "$NF" ; white " ChatGPT: \c" ; green "$chat");;  
+S5Status=$(white "Состояние Socks5 WARP：\c" ; green "работает, обычный аккаунт WARP (безлимитный трафик WARP)" ; white " Порт Socks5：\c" ; green "$mport" ; white " Провайдер Cloudflare выдал IPv4-адрес：\c" ; green "$s5ip  $country" ; white " Статус разблокировки Netflix NF：\c" ; green "$NF" ; white " Статус разблокировки ChatGPT：\c" ; green "$chat");;  
 *) 
-S5Status=$(white "Статус Socks5 WARP:\c" ; yellow "Клиент Socks5-WARP установлен, но порт закрыт")
+S5Status=$(white "Состояние Socks5 WARP：\c" ; yellow "Клиент Socks5-WARP установлен, но порт находится в закрытом состоянии")
 esac 
 else
-S5Status=$(white "Статус Socks5 WARP:\c" ; red "Клиент Socks5-WARP не установлен")
+S5Status=$(white "Состояние Socks5 WARP：\c" ; red "Клиент Socks5-WARP не установлен")
 fi
 }
 
 SOCKS5ins(){
-yellow "Проверка окружения для Socks5-WARP..."
+yellow "Проверка среды установки Socks5-WARP……"
 if [[ $release = Centos ]]; then
-[[ ! ${vsid} =~ 8 ]] && yellow "Версия системы: Centos $vsid \nSocks5-WARP поддерживает только Centos 8 " && exit 
+[[ ! ${vsid} =~ 8 ]] && yellow "Текущая версия системы: Centos $vsid \nSocks5-WARP поддерживает только Centos 8 " && exit 
 elif [[ $release = Ubuntu ]]; then
-[[ ! ${vsid} =~ 20|22|24 ]] && yellow "Версия системы: Ubuntu $vsid \nSocks5-WARP поддерживает только Ubuntu 20.04/22.04/24.04 " && exit 
+[[ ! ${vsid} =~ 20|22|24 ]] && yellow "Текущая версия системы: Ubuntu $vsid \nSocks5-WARP поддерживает только Ubuntu 20.04/22.04/24.04 " && exit 
 elif [[ $release = Debian ]]; then
-[[ ! ${vsid} =~ 10|11|12|13 ]] && yellow "Версия системы: Debian $vsid \nSocks5-WARP поддерживает только Debian 10/11/12/13 " && exit 
+[[ ! ${vsid} =~ 10|11|12|13 ]] && yellow "Текущая версия системы: Debian $vsid \nSocks5-WARP поддерживает только Debian 10/11/12/13 " && exit 
 fi
 [[ $(warp-cli --accept-tos status 2>/dev/null) =~ 'Connected' ]] && red "Socks5-WARP уже запущен" && cf
 
@@ -465,7 +465,7 @@ v4v6
 if [[ -n $v6 && -z $v4 ]]; then
 systemctl start wg-quick@wgcf >/dev/null 2>&1
 restwarpgo
-red "Socks5-WARP не поддерживается на чистом IPv6 VPS" && sleep 2 && exit
+red "Установка Socks5-WARP пока не поддерживается на VPS только с IPV6" && sleep 2 && exit
 else
 systemctl start wg-quick@wgcf >/dev/null 2>&1
 restwarpgo
@@ -494,7 +494,7 @@ if [[ $release = Debian ]]; then
 [[ ! $(type -P gpg) ]] && apt update && apt install gnupg -y
 [[ ! $(apt list 2>/dev/null | grep apt-transport-https | grep installed) ]] && apt update && apt install apt-transport-https -y
 fi
-if [[ $release != Centos ]]; then 
+if [[ $release != Centos ]]; then
 apt install net-tools -y
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
@@ -508,45 +508,45 @@ warp-cli connect
 #wppluskey >/dev/null 2>&1
 #ID=$(tail -n1 /root/WARP+Keys.txt | cut -d' ' -f1 2>/dev/null)
 #if [[ -n $ID ]]; then
-#green "使用warp+密钥"
+#green "Использовать warp+ ключ"
 #green "$(tail -n1 /root/WARP+Keys.txt | cut -d' ' -f1)"
 #warp-cli --accept-tos set-license $ID >/dev/null 2>&1
 #fi
 #rm -rf warpplus.sh
 #if [[ $(warp-cli --accept-tos account) =~ 'Limited' ]]; then
-#green "已升级为Socks5-WARP+账户\nSocks5-WARP+账户剩余流量：$((`warp-cli --accept-tos account | grep Quota | awk '{ print $(NF) }'`/1000000000)) GB"
+#green "Уже обновлено до аккаунта Socks5-WARP+\nОстаток трафика Socks5-WARP+: $((`warp-cli --accept-tos account | grep Quota | awk '{ print $(NF) }'`/1000000000)) GB"
 #fi
 green "Установка завершена, возврат в меню"
 sleep 2 && lncf && reswarp && cf
 }
 
 SOCKS5WARPUP(){
-[[ ! $(type -P warp-cli) ]] && red "Socks5-WARP не установлен, обновление невозможно" && exit
-[[ $(warp-cli --accept-tos account) =~ 'Limited' ]] && red "Уже используется аккаунт Socks5-WARP+, обновление не требуется" && exit
-readp "Введите ключ лицензии (26 символов):" ID
-[[ -n $ID ]] && warp-cli --accept-tos set-license $ID >/dev/null 2>&1 || (red "Не введен ключ (26 символов)" && exit)
-yellow "Если ошибка: Too many devices - значит ключ используется более чем на 5 устройствах или введен неверно"
+[[ ! $(type -P warp-cli) ]] && red "Socks5-WARP не установлен, невозможно обновить до аккаунта Socks5-WARP+" && exit
+[[ $(warp-cli --accept-tos account) =~ 'Limited' ]] && red "Сейчас уже используется аккаунт Socks5-WARP+, повторное обновление не требуется" && exit
+readp "Лицензионный ключ (26 символов):" ID
+[[ -n $ID ]] && warp-cli --accept-tos set-license $ID >/dev/null 2>&1 || (red "Лицензионный ключ не введён (26 символов)" && exit)
+yellow "Если появится ошибка Error: Too many devices, возможно, к ключу уже привязано более 5 устройств или ключ введён неверно"
 if [[ $(warp-cli --accept-tos account) =~ 'Limited' ]]; then
-green "Обновлено до Socks5-WARP+\nОстаток трафика Socks5-WARP+: $((`warp-cli --accept-tos account | grep Quota | awk '{ print $(NF) }'`/1000000000)) GB"
+green "Уже обновлено до аккаунта Socks5-WARP+\nОстаток трафика Socks5-WARP+: $((`warp-cli --accept-tos account | grep Quota | awk '{ print $(NF) }'`/1000000000)) GB"
 else
-red "Ошибка обновления до Socks5-WARP+" && exit
+red "Не удалось обновить аккаунт до Socks5-WARP+" && exit
 fi
 sleep 2 && ShowSOCKS5 && S5menu
 }
 
 SOCKS5WARPPORT(){
-[[ ! $(type -P warp-cli) ]] && red "Socks5-WARP(+) не установлен, смена порта невозможна" && exit
-readp "Введите порт socks5 [2000～65535] (Enter = Случайный порт):" port
+[[ ! $(type -P warp-cli) ]] && red "Socks5-WARP(+) не установлен, невозможно изменить порт" && exit
+readp "Введите пользовательский порт socks5 [2000～65535] (нажмите Enter для случайного порта в диапазоне 2000-65535):" port
 if [[ -z $port ]]; then
 port=$(shuf -i 2000-65535 -n 1)
 until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]]
 do
-[[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]] && yellow "\nПорт занят, попробуйте другой" && readp "Свой порт socks5:" port
+[[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]] && yellow "\nПорт занят, пожалуйста, введите другой порт" && readp "Пользовательский порт socks5:" port
 done
 else
 until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]]
 do
-[[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]] && yellow "\nПорт занят, попробуйте другой" && readp "Свой порт socks5:" port
+[[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]] && yellow "\nПорт занят, пожалуйста, введите другой порт" && readp "Пользовательский порт socks5:" port
 done
 fi
 [[ -n $port ]] && warp-cli --accept-tos set-proxy-port $port >/dev/null 2>&1
@@ -556,24 +556,24 @@ sleep 2 && ShowSOCKS5 && S5menu
 
 WGCFmenu(){
 name=`screen -ls | grep '(Detached)' | awk '{print $1}' | awk -F "." '{print $2}'`
-[[ $name =~ "up" ]] && keepup="Мониторинг WARP: ВКЛ" || keepup="Мониторинг WARP: ВЫКЛ"
+[[ $name =~ "up" ]] && keepup="Мониторинг WARP включён" || keepup="Мониторинг WARP отключён"
 white "------------------------------------------------------------------------------------"
-white " Вариант 1: Статус исходящего IPv4 ($keepup)"
+white " Вариант 1: текущая ситуация с исходящим трафиком VPS через IPV4 ($keepup)"
 white " ${WARPIPv4Status}"
 white "------------------------------------------------------------------------------------"
-white " Вариант 1: Статус исходящего IPv6 ($keepup)"
+white " Вариант 1: текущая ситуация с исходящим трафиком VPS через IPV6 ($keepup)"
 white " ${WARPIPv6Status}"
 white "------------------------------------------------------------------------------------"
 if [[ "$WARPIPv4Status" == *不存在* && "$WARPIPv6Status" == *不存在* ]]; then
-yellow "IPv4 и IPv6 отсутствуют. Рекомендации:"
-red "1. Если был установлен wgcf, выберите 9 для смены на warp-go и переустановки"
-red "2. Если был установлен warp-go, выберите 10 для смены на wgcf и переустановки"
-red "Важно: Если не помогает, рекомендуется удалить и перезагрузить VPS, затем переустановить Вариант 1"
+yellow "И IPV4, и IPV6 отсутствуют, рекомендации:"
+red "1. Если ранее был установлен wgcf, выберите 9 для переключения на warp-go и переустановки warp"
+red "2. Если ранее был установлен warp-go, выберите 10 для переключения на wgcf и переустановки warp"
+red "Важно: если ситуация не изменится, рекомендуется удалить всё, перезагрузить VPS и затем заново установить вариант 1"
 fi
 }
 S5menu(){
 white "------------------------------------------------------------------------------------------------"
-white " Вариант 2: Статус локального прокси Socks5-WARP"
+white " Вариант 2: текущее состояние локального прокси официального клиента Socks5-WARP"
 blue " ${S5Status}"
 white "------------------------------------------------------------------------------------------------"
 }
@@ -599,9 +599,9 @@ rm /tmp/crontab.tmp
 
 ONEWARPGO(){
 if [[ $(echo "$op" | grep -i -E "arch|alpine") ]]; then
-red "Скрипт не поддерживает систему $op, используйте Ubuntu, Debian или Centos." && exit
+red "Скрипт не поддерживает текущую систему $op, используйте Ubuntu, Debian или Centos." && exit
 fi
-yellow "\n Подождите, режим установки ядра warp-go, проверка IP..."
+yellow "\n Подождите, сейчас используется режим установки на ядре warp-go, выполняется проверка IP узла и исходящего трафика……"
 warpip
 
 wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /usr/local/bin/warp.conf'
@@ -615,7 +615,7 @@ wgo8='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 162.159.
 
 STOPwgcf(){
 if [[ -n $(type -P warp-cli) ]]; then
-red "Установлен Socks5-WARP, выбранный вариант установки WARP не поддерживается" 
+red "Socks5-WARP уже установлен, выбранный вариант установки WARP не поддерживается" 
 systemctl restart warp-go && cf
 fi
 }
@@ -625,7 +625,7 @@ UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 v4v6
 warppflow=$((`grep -oP '"quota":\K\d+' <<< $(curl -sm4 "https://api.cloudflareclient.com/v0a884/reg/$(grep 'Device' /usr/local/bin/warp.conf 2>/dev/null | cut -d= -f2 | sed 's# ##g')" -H "User-Agent: okhttp/3.12.1" -H "Authorization: Bearer $(grep 'Token' /usr/local/bin/warp.conf 2>/dev/null | cut -d= -f2 | sed 's# ##g')")`))
 flow=`echo "scale=2; $warppflow/1000000000" | bc`
-[[ -e /usr/local/bin/warpplus.log ]] && cfplus="WARP+ (Остаток: $flow GB), Устройство: $(sed -n 1p /usr/local/bin/warpplus.log)" || cfplus="WARP+Teams (Безлимит)"
+[[ -e /usr/local/bin/warpplus.log ]] && cfplus="Аккаунт WARP+ (ограниченный трафик WARP+: $flow GB), имя устройства: $(sed -n 1p /usr/local/bin/warpplus.log)" || cfplus="Командный аккаунт WARP+ Teams (безлимитный трафик WARP+)"
 if [[ -n $v4 ]]; then
 nf4
 chatgpt4
@@ -640,14 +640,14 @@ nonf=$(curl -sm3 --user-agent "${UA_Browser}" http://ip-api.com/json/$v4?lang=zh
 country=$nonf
 case ${wgcfv4} in 
 plus) 
-WARPIPv4Status=$(white "Статус WARP+:\c" ; rred "Работает, $cfplus" ; white " IP от Cloudflare IPv4: \c" ; rred "$v4  $country" ; white " Netflix: \c" ; rred "$NF" ; white " ChatGPT: \c" ; rred "$chat");;  
+WARPIPv4Status=$(white "Состояние WARP+：\c" ; rred "работает, $cfplus" ; white " Провайдер Cloudflare выдал IPv4-адрес：\c" ; rred "$v4  $country" ; white " Статус разблокировки Netflix NF：\c" ; rred "$NF" ; white " Статус разблокировки ChatGPT：\c" ; rred "$chat");;  
 on) 
-WARPIPv4Status=$(white "Статус WARP:\c" ; green "Работает, WARP Free (Безлимит)" ; white " IP от Cloudflare IPv4: \c" ; green "$v4  $country" ; white " Netflix: \c" ; green "$NF" ; white " ChatGPT: \c" ; green "$chat");;
+WARPIPv4Status=$(white "Состояние WARP：\c" ; green "работает, обычный аккаунт WARP (безлимитный трафик WARP)" ; white " Провайдер Cloudflare выдал IPv4-адрес：\c" ; green "$v4  $country" ; white " Статус разблокировки Netflix NF：\c" ; green "$NF" ; white " Статус разблокировки ChatGPT：\c" ; green "$chat");;
 off) 
-WARPIPv4Status=$(white "Статус WARP:\c" ; yellow "Выключен" ; white " IP провайдера $isp4 IPv4: \c" ; yellow "$v4  $country" ; white " Netflix: \c" ; yellow "$NF" ; white " ChatGPT: \c" ; yellow "$chat");; 
+WARPIPv4Status=$(white "Состояние WARP：\c" ; yellow "отключён" ; white " Провайдер $isp4 выдал IPv4-адрес：\c" ; yellow "$v4  $country" ; white " Статус разблокировки Netflix NF：\c" ; yellow "$NF" ; white " Статус разблокировки ChatGPT：\c" ; yellow "$chat");; 
 esac 
 else
-WARPIPv4Status=$(white "Статус IPv4:\c" ; red "Нет адреса IPv4")
+WARPIPv4Status=$(white "Состояние IPV4：\c" ; red "IPV4-адрес отсутствует ")
 fi 
 if [[ -n $v6 ]]; then
 nf6
@@ -663,40 +663,40 @@ nonf=$(curl -sm3 --user-agent "${UA_Browser}" http://ip-api.com/json/$v6?lang=zh
 country=$nonf
 case ${wgcfv6} in 
 plus) 
-WARPIPv6Status=$(white "Статус WARP+:\c" ; rred "Работает, $cfplus" ; white " IP от Cloudflare IPv6: \c" ; rred "$v6  $country" ; white " Netflix: \c" ; rred "$NF" ; white " ChatGPT: \c" ; rred "$chat");;  
+WARPIPv6Status=$(white "Состояние WARP+：\c" ; rred "работает, $cfplus" ; white " Провайдер Cloudflare выдал IPv6-адрес：\c" ; rred "$v6  $country" ; white " Статус разблокировки Netflix NF：\c" ; rred "$NF" ; white " Статус разблокировки ChatGPT：\c" ; rred "$chat");;  
 on) 
-WARPIPv6Status=$(white "Статус WARP:\c" ; green "Работает, WARP Free (Безлимит)" ; white " IP от Cloudflare IPv6: \c" ; green "$v6  $country" ; white " Netflix: \c" ; green "$NF" ; white " ChatGPT: \c" ; green "$chat");;
+WARPIPv6Status=$(white "Состояние WARP：\c" ; green "работает, обычный аккаунт WARP (безлимитный трафик WARP)" ; white " Провайдер Cloudflare выдал IPv6-адрес：\c" ; green "$v6  $country" ; white " Статус разблокировки Netflix NF：\c" ; green "$NF" ; white " Статус разблокировки ChatGPT：\c" ; green "$chat");;
 off) 
-WARPIPv6Status=$(white "Статус WARP:\c" ; yellow "Выключен" ; white " IP провайдера $isp6 IPv6: \c" ; yellow "$v6  $country" ; white " Netflix: \c" ; yellow "$NF" ; white " ChatGPT: \c" ; yellow "$chat");;
+WARPIPv6Status=$(white "Состояние WARP：\c" ; yellow "отключён" ; white " Провайдер $isp6 выдал IPv6-адрес：\c" ; yellow "$v6  $country" ; white " Статус разблокировки Netflix NF：\c" ; yellow "$NF" ; white " Статус разблокировки ChatGPT：\c" ; yellow "$chat");;
 esac 
 else
-WARPIPv6Status=$(white "Статус IPv6:\c" ; red "Нет адреса IPv6")
+WARPIPv6Status=$(white "Состояние IPV6：\c" ; red "IPV6-адрес отсутствует ")
 fi 
 }
 
 CheckWARP(){
 i=0
 while [ $i -le 9 ]; do let i++
-yellow "Попытка $i из 10 получения IP WARP..."
+yellow "Всего выполняется 10 попыток, сейчас $i-я попытка получить IP warp……"
 restwarpgo
 checkwgcf
 if [[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]]; then
-green "Поздравляем! IP WARP успешно получен!" && dns
+green "Поздравляем! IP warp получен успешно!" && dns
 break
 else
-red "Увы! Не удалось получить IP WARP"
+red "К сожалению, не удалось получить IP warp"
 fi
 done
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
-red "Установка WARP не удалась, откат VPS, удаление WARP"
+red "Установка WARP не удалась, восстановление VPS и удаление WARP"
 cwg
 echo
-[[ $release = Centos && ${vsid} -lt 7 ]] && yellow "Версия системы: Centos $vsid \nРекомендуется Centos 7+ " 
-[[ $release = Ubuntu && ${vsid} -lt 18 ]] && yellow "Версия системы: Ubuntu $vsid \nРекомендуется Ubuntu 18+ " 
-[[ $release = Debian && ${vsid} -lt 10 ]] && yellow "Версия системы: Debian $vsid \nРекомендуется Debian 10+ "
+[[ $release = Centos && ${vsid} -lt 7 ]] && yellow "Текущая версия системы: Centos $vsid \nРекомендуется использовать Centos 7 и выше " 
+[[ $release = Ubuntu && ${vsid} -lt 18 ]] && yellow "Текущая версия системы: Ubuntu $vsid \nРекомендуется использовать Ubuntu 18 и выше " 
+[[ $release = Debian && ${vsid} -lt 10 ]] && yellow "Текущая версия системы: Debian $vsid \nРекомендуется использовать Debian 10 и выше "
 yellow "Подсказка:"
-red "Попробуйте Вариант 2 или 3"
-red "Или выберите ядро WGCF для установки (Вариант 1)"
+red "Возможно, вы можете использовать вариант 2 или вариант 3 для реализации WARP"
+red "Также можно выбрать ядро WGCF для установки WARP по варианту 1"
 exit
 else 
 green "ok" && systemctl restart warp-go
@@ -708,20 +708,20 @@ nat4(){
 }
 
 WGCFv4(){
-yellow "Ждите 3 сек, проверка окружения WARP"
+yellow "Подождите 3 секунды, выполняется проверка среды warp на VPS"
 docker && checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Впервые ставим warp-go на DualStack (v4+v6) VPS\nДобавляем WARP IPv4 (Исходящий: Native IPv6 + WARP IPv4)" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV4 (исходящий трафик: нативный IPV6 + WARP IPV4)" && sleep 2
 wpgo1=$wgo1 && wpgo2=$wgo4 && wpgo3=$wgo8 && WGCFins
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Впервые ставим warp-go на Native IPv6 VPS\nДобавляем WARP IPv4 (Исходящий: Native IPv6 + WARP IPv4)" && sleep 2
+green "На текущем VPS только с нативным v6 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV4 (исходящий трафик: нативный IPV6 + WARP IPV4)" && sleep 2
 wpgo1=$wgo1 && wpgo2=$wgo5 && wpgo3=$wgo7 && nat4 && WGCFins
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Впервые ставим warp-go на Native IPv4 VPS\nДобавляем WARP IPv4 (Исходящий: только WARP IPv4)" && sleep 2
+green "На текущем VPS только с нативным v4 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV4 (исходящий трафик: только WARP IPV4)" && sleep 2
 wpgo1=$wgo1 && wpgo2=$wgo4 && wpgo3=$wgo6 && WGCFins
 fi
 echo 'w4' > /root/warpip/wp.log && xyz && WGCFmenu
@@ -730,15 +730,15 @@ else
 kill -15 $(pgrep warp-go) >/dev/null 2>&1
 sleep 2 && v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Быстрая смена на WARP IPv4 для DualStack VPS\n(Исходящий: Native IPv6 + WARP IPv4)" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV4 (исходящий трафик: нативный IPV6 + WARP IPV4)" && sleep 2
 wpgo1=$wgo1 && ABC
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Быстрая смена на WARP IPv4 для Native IPv6 VPS\n(Исходящий: Native IPv6 + WARP IPv4)" && sleep 2
+green "На текущем VPS только с нативным v6 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV4 (исходящий трафик: нативный IPV6 + WARP IPV4)" && sleep 2
 wpgo1=$wgo1 && ABC
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Быстрая смена на WARP IPv4 для Native IPv4 VPS\n(Исходящий: только WARP IPv4)" && sleep 2
+green "На текущем VPS только с нативным v4 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV4 (исходящий трафик: только WARP IPV4)" && sleep 2
 wpgo1=$wgo1 && ABC
 fi
 echo 'w4' > /root/warpip/wp.log
@@ -748,20 +748,20 @@ fi
 }
 
 WGCFv6(){
-yellow "Ждите 3 сек, проверка окружения WARP"
+yellow "Подождите 3 секунды, выполняется проверка среды warp на VPS"
 docker && checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Впервые ставим warp-go на DualStack (v4+v6) VPS\nДобавляем WARP IPv6 (Исходящий: Native IPv4 + WARP IPv6)" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV6 (исходящий трафик: нативный IPV4 + WARP IPV6)" && sleep 2
 wpgo1=$wgo2 && wpgo2=$wgo4 && wpgo3=$wgo8 && WGCFins
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Впервые ставим warp-go на Native IPv6 VPS\nДобавляем WARP IPv6 (Исходящий: только WARP IPv6)" && sleep 2
+green "На текущем VPS только с нативным v6 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV6 (исходящий трафик: только WARP IPV6)" && sleep 2
 wpgo1=$wgo2 && wpgo2=$wgo5 && wpgo3=$wgo7 && nat4 && WGCFins
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Впервые ставим warp-go на Native IPv4 VPS\nДобавляем WARP IPv6 (Исходящий: Native IPv4 + WARP IPv6)" && sleep 2
+green "На текущем VPS только с нативным v4 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV6 (исходящий трафик: нативный IPV4 + WARP IPV6)" && sleep 2
 wpgo1=$wgo2 && wpgo2=$wgo4 && wpgo3=$wgo6 && WGCFins
 fi
 echo 'w6' > /root/warpip/wp.log && xyz && WGCFmenu
@@ -770,15 +770,15 @@ else
 kill -15 $(pgrep warp-go) >/dev/null 2>&1
 sleep 2 && v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Быстрая смена на WARP IPv6 для DualStack VPS\n(Исходящий: Native IPv4 + WARP IPv6)" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV6 (исходящий трафик: нативный IPV4 + WARP IPV6)" && sleep 2
 wpgo1=$wgo2 && ABC
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Быстрая смена на WARP IPv6 для Native IPv6 VPS\n(Исходящий: только WARP IPv6)" && sleep 2
+green "На текущем VPS только с нативным v6 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV6 (исходящий трафик: только WARP IPV6)" && sleep 2
 wpgo1=$wgo2 && ABC
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Быстрая смена на WARP IPv6 для Native IPv4 VPS\n(Исходящий: Native IPv4 + WARP IPv6)" && sleep 2
+green "На текущем VPS только с нативным v4 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV6 (исходящий трафик: нативный IPV4 + WARP IPV6)" && sleep 2
 wpgo1=$wgo2 && ABC
 fi
 echo 'w6' > /root/warpip/wp.log
@@ -788,20 +788,20 @@ fi
 }
 
 WGCFv4v6(){
-yellow "Ждите 3 сек, проверка окружения WARP"
+yellow "Подождите 3 секунды, выполняется проверка среды warp на VPS"
 docker && checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Впервые ставим warp-go на DualStack (v4+v6) VPS\nДобавляем WARP IPv4+IPV6 (Исходящий: WARP DualStack)" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV4+IPV6 (исходящий трафик: WARP dual-stack IPV4 + IPV6)" && sleep 2
 wpgo1=$wgo3 && wpgo2=$wgo4 && wpgo3=$wgo8 && WGCFins
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Впервые ставим warp-go на Native IPv6 VPS\nДобавляем WARP IPv4+IPV6 (Исходящий: WARP DualStack)" && sleep 2
+green "На текущем VPS только с нативным v6 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV4+IPV6 (исходящий трафик: WARP dual-stack IPV4 + IPV6)" && sleep 2
 wpgo1=$wgo3 && wpgo2=$wgo5 && wpgo3=$wgo7 && nat4 && WGCFins
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Впервые ставим warp-go на Native IPv4 VPS\nДобавляем WARP IPv4+IPV6 (Исходящий: WARP DualStack)" && sleep 2
+green "На текущем VPS только с нативным v4 впервые устанавливается warp-go\nСейчас будет добавлен WARP IPV4+IPV6 (исходящий трафик: WARP dual-stack IPV4 + IPV6)" && sleep 2
 wpgo1=$wgo3 && wpgo2=$wgo4 && wpgo3=$wgo6 && WGCFins
 fi
 echo 'w64' > /root/warpip/wp.log && xyz && WGCFmenu
@@ -810,15 +810,15 @@ else
 kill -15 $(pgrep warp-go) >/dev/null 2>&1
 sleep 2 && v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Быстрая смена на WARP IPv4+IPV6 для DualStack VPS\n(Исходящий: WARP DualStack)" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV4+IPV6 (исходящий трафик: WARP dual-stack IPV4 + IPV6)" && sleep 2
 wpgo1=$wgo3 && ABC
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Быстрая смена на WARP IPv4+IPV6 для Native IPv6 VPS\n(Исходящий: WARP DualStack)" && sleep 2
+green "На текущем VPS только с нативным v6 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV4+IPV6 (исходящий трафик: WARP dual-stack IPV4 + IPV6)" && sleep 2
 wpgo1=$wgo3 && ABC
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Быстрая смена на WARP IPv4+IPV6 для Native IPv4 VPS\n(Исходящий: WARP DualStack)" && sleep 2
+green "На текущем VPS только с нативным v4 уже установлен warp-go\nСейчас будет быстрое переключение на WARP IPV4+IPV6 (исходящий трафик: WARP dual-stack IPV4 + IPV6)" && sleep 2
 wpgo1=$wgo3 && ABC
 fi
 echo 'w64' > /root/warpip/wp.log
@@ -856,7 +856,7 @@ elif [[ $release = Ubuntu ]]; then
 apt update -y;apt install iproute2 openresolv dnsutils iputils-ping -y
 fi
 wget -N https://gitlab.com/rwkgyg/CFwarp/-/raw/main/warp-go_1.0.8_linux_${cpu} -O /usr/local/bin/warp-go && chmod +x /usr/local/bin/warp-go
-yellow "Регистрация обычного WARP аккаунта, ждите..."
+yellow "Выполняется запрос обычного аккаунта WARP, пожалуйста, подождите!"
 if [[ ! -s /usr/local/bin/warp.conf ]]; then
 cpujg
 curl -L -o warpapi -# --retry 2 https://gitlab.com/rwkgyg/CFwarp/-/raw/main/point/cpu1/$cpu
@@ -910,7 +910,7 @@ restwarpgo
 cat /usr/local/bin/warp.conf && sleep 2
 checkwgcf
 if [[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]]; then
-green "Поздравляем! IP WARP успешно получен!" && dns
+green "Поздравляем! IP warp получен успешно!" && dns
 else
 CheckWARP
 fi
@@ -919,12 +919,12 @@ curl -sL https://raw.githubusercontent.com/yonggekkk/warp-yg/main/version | awk 
 }
 
 warpinscha(){
-yellow "Подсказка: Исходящий трафик VPS будет перехвачен WARP IP."
+yellow "Подсказка: локальный исходящий IP VPS будет заменён выбранным вами IP warp; если у VPS нет такого локального исходящего IP, будет сгенерирован другой IP warp"
 echo
-green "1. Установить/Сменить WARP IPv4 (По умолчанию)"
-green "2. Установить/Сменить WARP IPv6"
-green "3. Установить/Сменить WARP DualStack (v4+v6)"
-readp "\nВыберите：" wgcfwarp
+green "1. Установить/переключить WARP single-stack IPV4 (по умолчанию Enter)"
+green "2. Установить/переключить WARP single-stack IPV6"
+green "3. Установить/переключить WARP dual-stack IPV4+IPV6"
+readp "\nВыберите:" wgcfwarp
 if [ -z "${wgcfwarp}" ] || [ $wgcfwarp == "1" ];then
 WGCFv4
 elif [ $wgcfwarp == "2" ];then
@@ -932,7 +932,7 @@ WGCFv6
 elif [ $wgcfwarp == "3" ];then
 WGCFv4v6
 else 
-red "Ошибка ввода" && warpinscha
+red "Ошибка ввода, пожалуйста, выберите снова" && warpinscha
 fi
 echo
 } 
@@ -952,9 +952,9 @@ elif [[ -z $v6 && -n $v4 ]]; then
 endp=$wgo4
 post=$wgo6
 fi
-yellow "Выполняется: Запрос обычного WARP аккаунта"
+yellow "Текущее действие: запрос обычного аккаунта WARP"
 echo
-yellow "Запрос аккаунта, ждите..."
+yellow "Выполняется запрос обычного аккаунта WARP, пожалуйста, подождите!"
 rm -rf /usr/local/bin/warp.conf /usr/local/bin/warp.conf.bak /usr/local/bin/warpplus.log
 curl -Ls -o /usr/local/bin/warp.conf --retry 2 https://api.zeroteam.top/warp?format=warp-go
 if [[ ! -s /usr/local/bin/warp.conf ]]; then
@@ -994,11 +994,11 @@ echo $post | sh
 CheckWARP && ShowWGCF &&  WGCFmenu
 }
 
-green "1. WARP Free (Безлимит)"
-green "2. WARP+ (Лимитированный)"
-green "3. WARP Teams (Zero Trust) (Безлимит)"
-green "4. Socks5+WARP+ (Лимитированный)"
-readp "Выберите тип аккаунта：" warpup
+green "1. Обычный аккаунт WARP (безлимитный трафик)"
+green "2. Аккаунт WARP+ (ограниченный трафик)"
+green "3. Командный аккаунт WARP Teams (Zero Trust) (безлимитный трафик)"
+green "4. Аккаунт Socks5+WARP+ (ограниченный трафик)"
+readp "Выберите тип аккаунта, на который хотите переключиться:" warpup
 if [[ $warpup == 1 ]]; then
 freewarp
 fi
@@ -1009,12 +1009,12 @@ fi
 
 if [[ $warpup == 2 ]]; then
 [[ ! $(type -P warp-go) ]] && red "warp-go не установлен" && exit
-green "Скопируйте ключ WARP+ из телефона или из интернета (26 символов). Из-за бага в WARP-GO обновление может не пройти."
-readp "Введите ключ WARP+:" ID
+green "Скопируйте лицензионный ключ из мобильного клиента WARP в статусе WARP+ или ключ из сетевого шаринга (26 символов). Из-за бага WARP-GO обновление с высокой вероятностью может завершиться неудачей"
+readp "Введите ключ для обновления до WARP+:" ID
 if [[ -z $ID ]]; then
-red "Пустой ввод" && WARPup
+red "Ничего не введено" && WARPup
 fi
-readp "Имя устройства (Enter = случайно):" dname
+readp "Задайте имя устройства, Enter — случайное:" dname
 if [[ -z $dname ]]; then
 dname=`date +%s%N |md5sum | cut -c 1-4`
 fi
@@ -1022,29 +1022,29 @@ green "Имя устройства: $dname"
 /usr/local/bin/warp-go --update --config=/usr/local/bin/warp.conf --license=$ID --device-name=$dname
 i=0
 while [ $i -le 9 ]; do let i++
-yellow "Попытка $i из 10 обновления до WARP+..." 
+yellow "Всего выполняется 10 попыток, сейчас $i-я попытка обновления аккаунта WARP+……" 
 restwarpgo
 checkwgcf
 if [[ $wgcfv4 = plus || $wgcfv6 = plus ]]; then
 rm -rf /usr/local/bin/warp.conf.bak /usr/local/bin/warpplus.log
 echo "$dname" >> /usr/local/bin/warpplus.log && echo "$ID" >> /usr/local/bin/warpplus.log
-green "WARP+ успешно активирован!" && ShowWGCF && WGCFmenu && break
+green "Аккаунт WARP+ успешно обновлён!" && ShowWGCF && WGCFmenu && break
 else
-red "Ошибка активации WARP+!" && sleep 1
+red "Не удалось обновить аккаунт WARP+!" && sleep 1
 fi
 done
 if [[ ! $wgcfv4 = plus && ! $wgcfv6 = plus ]]; then
 green "Рекомендации:"
-yellow "1. Проверьте трафик ключа в приложении 1.1.1.1"
-yellow "2. Проверьте лимит (5 устройств), удалите лишние в телефоне" && sleep 2
+yellow "1. Проверьте, есть ли трафик у аккаунта WARP+ в приложении 1.1.1.1 или у ключа из сетевого шаринга"
+yellow "2. Проверьте, не привязано ли к текущему лицензионному ключу WARP более 5 устройств; удалите устройства в мобильном клиенте и попробуйте снова обновить аккаунт WARP+" && sleep 2
 freewarp
 fi
 fi
     
 if [[ $warpup == 3 ]]; then
 [[ ! $(type -P warp-go) ]] && red "warp-go не установлен" && exit
-green "Получить Token для Zero Trust: https://web--public--warp-team-api--coia-mfs4.code.run/"
-readp "Введите Token команды: " token
+green "Адрес для получения Token команды Zero Trust: https://web--public--warp-team-api--coia-mfs4.code.run/"
+readp "Введите Token командного аккаунта: " token
 curl -Ls -o /usr/local/bin/warp.conf.bak --retry 2 https://api.zeroteam.top/warp?format=warp-go
 if [[ ! -s /usr/local/bin/warp.conf.bak ]]; then
 cpujg
@@ -1077,14 +1077,14 @@ sed -i "2s#.*#$(sed -ne 2p /usr/local/bin/warp.conf.bak)#;3s#.*#$(sed -ne 3p /us
 sed -i "4s#.*#$(sed -ne 4p /usr/local/bin/warp.conf.bak)#;5s#.*#$(sed -ne 5p /usr/local/bin/warp.conf.bak)#" /usr/local/bin/warp.conf >/dev/null 2>&1
 i=0
 while [ $i -le 9 ]; do let i++
-yellow "Попытка $i из 10 получения IP..."
+yellow "Всего выполняется 10 попыток, сейчас $i-я попытка получения IP warp……"
 restwarpgo
 checkwgcf
 if [[ $wgcfv4 = plus || $wgcfv6 = plus ]]; then
 rm -rf /usr/local/bin/warp.conf.bak /usr/local/bin/warpplus.log
-green "WARP Teams успешно активирован!" && ShowWGCF && WGCFmenu && break
+green "Аккаунт WARP Teams успешно обновлён!" && ShowWGCF && WGCFmenu && break
 else
-red "Ошибка активации WARP Teams!" && sleep 1
+red "Не удалось обновить аккаунт WARP Teams!" && sleep 1
 fi
 done
 if [[ ! $wgcfv4 = plus && ! $wgcfv6 = plus ]]; then
@@ -1094,23 +1094,23 @@ fi
 }
 
 WARPonoff(){
-[[ ! $(type -P warp-go) ]] && red "WARP не установлен, рекомендуется переустановить" && exit
-readp "1. Выключить WARP (и мониторинг)\n2. Включить/Перезагрузить WARP (и мониторинг)\n0. Назад\n Выберите：" unwp
+[[ ! $(type -P warp-go) ]] && red "WARP не установлен, рекомендуется установить заново" && exit
+readp "1. Выключить WARP (выключить онлайн-мониторинг WARP)\n2. Включить/перезапустить WARP (запустить онлайн-мониторинг WARP)\n0. Вернуться на уровень выше\n Выберите:" unwp
 if [ "$unwp" == "1" ]; then
 kill -15 $(pgrep warp-go) >/dev/null 2>&1 && sleep 2
 systemctl disable warp-go
 screen -ls | awk '/\.up/ {print $1}' | cut -d "." -f 1 | xargs kill 2>/dev/null
 unreswarp
 checkwgcf 
-[[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]] && green "WARP выключен" || red "Ошибка отключения WARP"
+[[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]] && green "WARP успешно выключен" || red "Не удалось выключить WARP"
 elif [ "$unwp" == "2" ]; then
 CheckWARP
 xyz
 name=`screen -ls | grep '(Detached)' | awk '{print $1}' | awk -F "." '{print $2}'`
-[[ $name =~ "up" ]] && green "Мониторинг WARP запущен" || red "Ошибка запуска мониторинга"
+[[ $name =~ "up" ]] && green "Онлайн-мониторинг WARP успешно запущен" || red "Не удалось запустить онлайн-мониторинг WARP, проверьте, установлен ли screen"
 reswarp
 checkwgcf 
-[[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]] && green "WARP включен" || red "Ошибка включения WARP"
+[[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]] && green "WARP успешно включён" || red "Не удалось включить WARP"
 else
 cf
 fi
@@ -1135,7 +1135,7 @@ kill -15 $(pgrep warp-go) >/dev/null 2>&1 && sleep 2
 wget -N https://gitlab.com/rwkgyg/CFwarp/-/raw/main/warp-go_1.0.8_linux_${cpu} -O /usr/local/bin/warp-go && chmod +x /usr/local/bin/warp-go
 restwarpgo
 loVERSION="$(/usr/local/bin/warp-go -v | sed -n 1p | awk '{print $1}' | awk -F"/" '{print $NF}')"
-green " Текущее ядро WARP-GO обновлено до версии: ${loVERSION}"
+green " Текущая установленная версия ядра WARP-GO: ${loVERSION}, уже является последней"
 }
 
 start_menu(){
@@ -1149,30 +1149,30 @@ echo -e "${bblue}     ░██        ░${plain}██    ░██ ██    
 echo -e "${bblue}     ░██ ${plain}        ░██    ░░██        ░██ ░██       ░${red}██ ░██       ░██ ░██ ${plain}  "
 echo -e "${bblue}     ░█${plain}█          ░██ ██ ██         ░██  ░░${red}██     ░██  ░░██     ░██  ░░██ ${plain}  "
 echo
-white "Github проект  ：github.com/yonggekkk"
-white "Blogger блог   ：ygkkk.blogspot.com"
-white "YouTube канал  ：www.youtube.com/@ygkkk"
+white "Проект Yongge на Github ：github.com/yonggekkk"
+white "Блог Yongge на Blogger ：ygkkk.blogspot.com"
+white "Канал Yongge на YouTube ：www.youtube.com/@ygkkk"
 green "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-yellow " Выберите подходящий вариант WARP (Можно установить варианты 1, 2, 3 одновременно)"
-yellow " Быстрый запуск скрипта: cf"
+yellow " Выберите подходящий для себя вариант реализации warp (пункты 1, 2, 3; можно выбрать один или несколько одновременно)"
+yellow " Быстрый вход в скрипт：cf"
 white " ================================================================="
-green "  1. Вариант 1: Установка/Смена WARP-GO"
-green "  2. Вариант 2: Установка Socks5-WARP"
-green "  3. Вариант 3: Генерация конфига WARP-Wireguard (QR-код)"
-green "  4. Удаление WARP"
+green "  1. Вариант 1: установить/переключить WARP-GO"
+green "  2. Вариант 2: установить Socks5-WARP"
+green "  3. Вариант 3: сгенерировать файл конфигурации и QR-код WARP-Wireguard"
+green "  4. Удалить WARP"
 white " -----------------------------------------------------------------"
-green "  5. Вкл/Выкл/Перезапуск WARP"
-green "  6. Дополнительные опции WARP"
-green "  7. Смена аккаунта WARP (Free/Plus/Teams)"
-green "  8. Обновить скрипт CFwarp"
+green "  5. Выключить, включить/перезапустить WARP"
+green "  6. Другие опции WARP"
+green "  7. Обновить/переключить три типа аккаунтов WARP"
+green "  8. Обновить установочный скрипт CFwarp"
 green "  9. Обновить ядро WARP-GO"
-green " 10. Заменить ядро WARP-GO на WGCF-WARP"
-green "  0. Выход "
+green " 10. Заменить текущее ядро WARP-GO на ядро WGCF-WARP"
+green "  0. Выйти из скрипта "
 red "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cfwarpshow
 red "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-white " Инфо о системе:"
-white " ОС: $(blue "$op") \c" && white " Ядро: $(blue "$version") \c" && white " CPU: $(blue "$cpu") \c" && white " Вирт.: $(blue "$vi")"
+white " Информация о системе VPS:"
+white " Операционная система: $(blue "$op") \c" && white " Версия ядра: $(blue "$version") \c" && white " Архитектура CPU : $(blue "$cpu") \c" && white " Тип виртуализации: $(blue "$vi")"
 WGCFmenu
 S5menu
 echo
@@ -1209,9 +1209,9 @@ fi
 
 ONEWGCFWARP(){
 if [[ $(echo "$op" | grep -i -E "arch|alpine") ]]; then
-red "Скрипт не поддерживает систему $op, используйте Ubuntu, Debian или Centos." && exit
+red "Скрипт не поддерживает текущую систему $op, используйте Ubuntu, Debian или Centos." && exit
 fi
-yellow "\n Подождите, режим установки ядра wgcf, проверка IP..."
+yellow "\n Подождите, сейчас используется режим установки на ядре wgcf, выполняется проверка IP узла и исходящего трафика……"
 warpip
 
 ud4='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 162.159.192.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 162.159.192.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'
@@ -1229,7 +1229,7 @@ UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 v4v6
 warppflow=$((`grep -oP '"quota":\K\d+' <<< $(curl -sm4 "https://api.cloudflareclient.com/v0a884/reg/$(grep 'device_id' /etc/wireguard/wgcf-account.toml 2>/dev/null | cut -d \' -f2)" -H "User-Agent: okhttp/3.12.1" -H "Authorization: Bearer $(grep 'access_token' /etc/wireguard/wgcf-account.toml 2>/dev/null | cut -d \' -f2)")`))
 flow=`echo "scale=2; $warppflow/1000000000" | bc`
-[[ -e /etc/wireguard/wgcf+p.log ]] && cfplus="WARP+ (Остаток: $flow GB), Устройство: $(grep -s 'Device name' /etc/wireguard/wgcf+p.log | awk '{ print $NF }')" || cfplus="WARP+Teams (Безлимит)"
+[[ -e /etc/wireguard/wgcf+p.log ]] && cfplus="Аккаунт WARP+ (ограниченный трафик WARP+: $flow GB), имя устройства: $(grep -s 'Device name' /etc/wireguard/wgcf+p.log | awk '{ print $NF }')" || cfplus="Командный аккаунт WARP+ Teams (безлимитный трафик WARP+)"
 if [[ -n $v4 ]]; then
 nf4
 chatgpt4
@@ -1244,14 +1244,14 @@ nonf=$(curl -sm3 --user-agent "${UA_Browser}" http://ip-api.com/json/$v4?lang=zh
 country=$nonf
 case ${wgcfv4} in 
 plus) 
-WARPIPv4Status=$(white "Статус WARP+:\c" ; rred "Работает, $cfplus" ; white " IP от Cloudflare IPv4: \c" ; rred "$v4  $country" ; white " Netflix: \c" ; rred "$NF" ; white " ChatGPT: \c" ; rred "$chat");;  
+WARPIPv4Status=$(white "Состояние WARP+：\c" ; rred "работает, $cfplus" ; white " Провайдер Cloudflare выдал IPv4-адрес：\c" ; rred "$v4  $country" ; white " Статус разблокировки Netflix NF：\c" ; rred "$NF" ; white " Статус разблокировки ChatGPT：\c" ; rred "$chat");;  
 on) 
-WARPIPv4Status=$(white "Статус WARP:\c" ; green "Работает, WARP Free (Безлимит)" ; white " IP от Cloudflare IPv4: \c" ; green "$v4  $country" ; white " Netflix: \c" ; green "$NF" ; white " ChatGPT: \c" ; green "$chat");;
+WARPIPv4Status=$(white "Состояние WARP：\c" ; green "работает, обычный аккаунт WARP (безлимитный трафик WARP)" ; white " Провайдер Cloudflare выдал IPv4-адрес：\c" ; green "$v4  $country" ; white " Статус разблокировки Netflix NF：\c" ; green "$NF" ; white " Статус разблокировки ChatGPT：\c" ; green "$chat");;
 off) 
-WARPIPv4Status=$(white "Статус WARP:\c" ; yellow "Выключен" ; white " IP провайдера $isp4 IPv4: \c" ; yellow "$v4  $country" ; white " Netflix: \c" ; yellow "$NF" ; white " ChatGPT: \c" ; yellow "$chat");; 
+WARPIPv4Status=$(white "Состояние WARP：\c" ; yellow "отключён" ; white " Провайдер $isp4 выдал IPv4-адрес：\c" ; yellow "$v4  $country" ; white " Статус разблокировки Netflix NF：\c" ; yellow "$NF" ; white " Статус разблокировки ChatGPT：\c" ; yellow "$chat");; 
 esac 
 else
-WARPIPv4Status=$(white "Статус IPv4:\c" ; red "Нет адреса IPv4")
+WARPIPv4Status=$(white "Состояние IPV4：\c" ; red "IPV4-адрес отсутствует ")
 fi 
 if [[ -n $v6 ]]; then
 nf6
@@ -1267,20 +1267,20 @@ nonf=$(curl -sm3 --user-agent "${UA_Browser}" http://ip-api.com/json/$v6?lang=zh
 country=$nonf
 case ${wgcfv6} in 
 plus) 
-WARPIPv6Status=$(white "Статус WARP+:\c" ; rred "Работает, $cfplus" ; white " IP от Cloudflare IPv6: \c" ; rred "$v6  $country" ; white " Netflix: \c" ; rred "$NF" ; white " ChatGPT: \c" ; rred "$chat");;  
+WARPIPv6Status=$(white "Состояние WARP+：\c" ; rred "работает, $cfplus" ; white " Провайдер Cloudflare выдал IPv6-адрес：\c" ; rred "$v6  $country" ; white " Статус разблокировки Netflix NF：\c" ; rred "$NF" ; white " Статус разблокировки ChatGPT：\c" ; rred "$chat");;  
 on) 
-WARPIPv6Status=$(white "Статус WARP:\c" ; green "Работает, WARP Free (Безлимит)" ; white " IP от Cloudflare IPv6: \c" ; green "$v6  $country" ; white " Netflix: \c" ; green "$NF" ; white " ChatGPT: \c" ; green "$chat");;
+WARPIPv6Status=$(white "Состояние WARP：\c" ; green "работает, обычный аккаунт WARP (безлимитный трафик WARP)" ; white " Провайдер Cloudflare выдал IPv6-адрес：\c" ; green "$v6  $country" ; white " Статус разблокировки Netflix NF：\c" ; green "$NF" ; white " Статус разблокировки ChatGPT：\c" ; green "$chat");;
 off) 
-WARPIPv6Status=$(white "Статус WARP:\c" ; yellow "Выключен" ; white " IP провайдера $isp6 IPv6: \c" ; yellow "$v6  $country" ; white " Netflix: \c" ; yellow "$NF" ; white " ChatGPT: \c" ; yellow "$chat");;
+WARPIPv6Status=$(white "Состояние WARP：\c" ; yellow "отключён" ; white " Провайдер $isp6 выдал IPv6-адрес：\c" ; yellow "$v6  $country" ; white " Статус разблокировки Netflix NF：\c" ; yellow "$NF" ; white " Статус разблокировки ChatGPT：\c" ; yellow "$chat");;
 esac 
 else
-WARPIPv6Status=$(white "Статус IPv6:\c" ; red "Нет адреса IPv6")
+WARPIPv6Status=$(white "Состояние IPV6：\c" ; red "IPV6-адрес отсутствует ")
 fi 
 }
 
 STOPwgcf(){
 if [[ $(type -P warp-cli) ]]; then
-red "Установлен Socks5-WARP, выбранный вариант установки wgcf-warp не поддерживается" 
+red "Socks5-WARP уже установлен, выбранный вариант установки wgcf-warp не поддерживается" 
 systemctl restart wg-quick@wgcf && cf
 fi
 }
@@ -1314,20 +1314,20 @@ nat4(){
 }
 
 WGCFv4(){
-yellow "Ждите 3 сек, проверка окружения WARP"
+yellow "Подождите 3 секунды, выполняется проверка среды warp на VPS"
 docker && checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Впервые ставим wgcf-warp на DualStack (v4+v6) VPS\nДобавляем IPv4 Single Stack wgcf-warp" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp single-stack IPV4" && sleep 2
 ABC1=$c5 && ABC2=$c2 && ABC3=$ud4 && ABC4=$c3 && WGCFins
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Впервые ставим wgcf-warp на Native IPv6 VPS\nДобавляем IPv4 Single Stack wgcf-warp" && sleep 2
+green "На текущем VPS только с нативным v6 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp single-stack IPV4" && sleep 2
 ABC1=$c5 && ABC2=$c4 && ABC3=$c2 && nat4 && WGCFins
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Впервые ставим wgcf-warp на Native IPv4 VPS\nДобавляем IPv4 Single Stack wgcf-warp" && sleep 2
+green "На текущем VPS только с нативным v4 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp single-stack IPV4" && sleep 2
 ABC1=$c5 && ABC2=$c2 && ABC3=$c3 && ABC4=$ud4 && WGCFins
 fi
 echo 'w4' > /root/warpip/wp.log && xyz && WGCFmenu
@@ -1336,15 +1336,15 @@ else
 wg-quick down wgcf >/dev/null 2>&1
 sleep 1 && v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Быстрая смена на IPv4 Single Stack wgcf-warp для DualStack VPS" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp single-stack IPV4" && sleep 2
 conf && ABC1=$c5 && ABC2=$c2 && ABC3=$ud4 && ABC4=$c3 && ABC
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Быстрая смена на IPv4 Single Stack wgcf-warp для Native IPv6 VPS" && sleep 2
+green "На текущем VPS только с нативным v6 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp single-stack IPV4" && sleep 2
 conf && ABC1=$c5 && ABC2=$c4 && ABC3=$c2 && nat4 && ABC
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Быстрая смена на IPv4 Single Stack wgcf-warp для Native IPv4 VPS" && sleep 2
+green "На текущем VPS только с нативным v4 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp single-stack IPV4" && sleep 2
 conf && ABC1=$c5 && ABC2=$c2 && ABC3=$c3 && ABC4=$ud4 && ABC
 fi
 echo 'w4' > /root/warpip/wp.log
@@ -1354,20 +1354,20 @@ fi
 }
 
 WGCFv6(){
-yellow "Ждите 3 сек, проверка окружения WARP"
+yellow "Подождите 3 секунды, выполняется проверка среды warp на VPS"
 docker && checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Впервые ставим wgcf-warp на DualStack (v4+v6) VPS\nДобавляем IPv6 Single Stack wgcf-warp" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp single-stack IPV6" && sleep 2
 ABC1=$c5 && ABC2=$c1 && ABC3=$ud6 && ABC4=$c3 && WGCFins
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Впервые ставим wgcf-warp на Native IPv6 VPS\nДобавляем IPv6 Single Stack wgcf-warp (Без IPv4!!!)" && sleep 2
+green "На текущем VPS только с нативным v6 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp single-stack IPV6 (без IPV4!!!)" && sleep 2
 ABC1=$c6 && ABC2=$c1 && ABC3=$c4 && nat4 && ABC5=$ud6 && WGCFins
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Впервые ставим wgcf-warp на Native IPv4 VPS\nДобавляем IPv6 Single Stack wgcf-warp" && sleep 2
+green "На текущем VPS только с нативным v4 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp single-stack IPV6" && sleep 2
 ABC1=$c5 && ABC2=$c3 && ABC3=$c1 && WGCFins
 fi
 echo 'w6' > /root/warpip/wp.log && xyz && WGCFmenu
@@ -1376,15 +1376,15 @@ else
 wg-quick down wgcf >/dev/null 2>&1
 sleep 1 && v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Быстрая смена на IPv6 Single Stack wgcf-warp для DualStack VPS" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp single-stack IPV6" && sleep 2
 conf && ABC1=$c5 && ABC2=$c1 && ABC3=$ud6 && ABC4=$c3 && ABC
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Быстрая смена на IPv6 Single Stack wgcf-warp для Native IPv6 VPS\n(Без IPv4!!!)" && sleep 2
+green "На текущем VPS только с нативным v6 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp single-stack IPV6 (без IPV4!!!)" && sleep 2
 conf && ABC1=$c6 && ABC2=$c1 && ABC3=$c4 && nat4 && ABC5=$ud6 && ABC
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Быстрая смена на IPv6 Single Stack wgcf-warp для Native IPv4 VPS" && sleep 2
+green "На текущем VPS только с нативным v4 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp single-stack IPV6" && sleep 2
 conf && ABC1=$c5 && ABC2=$c3 && ABC3=$c1 && ABC
 fi
 echo 'w6' > /root/warpip/wp.log
@@ -1394,20 +1394,20 @@ fi
 }
 
 WGCFv4v6(){
-yellow "Ждите 3 сек, проверка окружения WARP"
+yellow "Подождите 3 секунды, выполняется проверка среды warp на VPS"
 docker && checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
 v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Впервые ставим wgcf-warp на DualStack (v4+v6) VPS\nДобавляем IPv4+IPv6 DualStack wgcf-warp" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp dual-stack IPV4+IPV6" && sleep 2
 ABC1=$c5 && ABC2=$ud4ud6 && ABC3=$c3 && WGCFins
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Впервые ставим wgcf-warp на Native IPv6 VPS\nДобавляем IPv4+IPv6 DualStack wgcf-warp" && sleep 2
+green "На текущем VPS только с нативным v6 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp dual-stack IPV4+IPV6" && sleep 2
 ABC1=$c5 && ABC2=$c4 && ABC3=$ud6 && nat4 && WGCFins
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Впервые ставим wgcf-warp на Native IPv4 VPS\nДобавляем IPv4+IPv6 DualStack wgcf-warp" && sleep 2
+green "На текущем VPS только с нативным v4 впервые устанавливается wgcf-warp\nСейчас будет добавлен режим wgcf-warp dual-stack IPV4+IPV6" && sleep 2
 ABC1=$c5 && ABC2=$c3 && ABC3=$ud4 && WGCFins
 fi
 echo 'w64' > /root/warpip/wp.log && xyz && WGCFmenu
@@ -1416,15 +1416,15 @@ else
 wg-quick down wgcf >/dev/null 2>&1
 sleep 1 && v4v6
 if [[ -n $v4 && -n $v6 ]]; then
-green "Быстрая смена на IPv4+IPv6 DualStack wgcf-warp для DualStack VPS" && sleep 2
+green "На текущем VPS с нативным dual-stack v4+v6 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp dual-stack IPV4+IPV6" && sleep 2
 conf && ABC1=$c5 && ABC2=$ud4ud6 && ABC3=$c3 && ABC
 fi
 if [[ -n $v6 && -z $v4 ]]; then
-green "Быстрая смена на IPv4+IPv6 DualStack wgcf-warp для Native IPv6 VPS" && sleep 2
+green "На текущем VPS только с нативным v6 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp dual-stack IPV4+IPV6" && sleep 2
 conf && ABC1=$c5 && ABC2=$c4 && ABC3=$ud6 && nat4 && ABC
 fi
 if [[ -z $v6 && -n $v4 ]]; then
-green "Быстрая смена на IPv4+IPv6 DualStack wgcf-warp для Native IPv4 VPS" && sleep 2
+green "На текущем VPS только с нативным v4 уже установлен wgcf-warp\nСейчас будет быстрое переключение на режим wgcf-warp dual-stack IPV4+IPV6" && sleep 2
 conf && ABC1=$c5 && ABC2=$c3 && ABC3=$ud4 && ABC
 fi
 echo 'w64' > /root/warpip/wp.log
@@ -1437,22 +1437,22 @@ CheckWARP(){
 i=0
 wg-quick down wgcf >/dev/null 2>&1
 while [ $i -le 9 ]; do let i++
-yellow "Попытка $i из 10 получения IP WARP..."
+yellow "Всего выполняется 10 попыток, сейчас $i-я попытка получения IP warp……"
 systemctl restart wg-quick@wgcf >/dev/null 2>&1
 checkwgcf
-[[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]] && green "Поздравляем! IP WARP успешно получен!" && break || red "Увы! Не удалось получить IP WARP"
+[[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]] && green "Поздравляем! IP warp получен успешно!" && break || red "К сожалению, не удалось получить IP warp"
 done
 checkwgcf
 if [[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]]; then
-red "Установка WARP не удалась, откат VPS, удаление компонентов Wgcf-WARP..."
+red "Установка WARP не удалась, восстановление VPS и удаление компонентов Wgcf-WARP……"
 cwg
 echo
-[[ $release = Centos && ${vsid} -lt 7 ]] && yellow "Версия системы: Centos $vsid \nРекомендуется Centos 7+ " 
-[[ $release = Ubuntu && ${vsid} -lt 18 ]] && yellow "Версия системы: Ubuntu $vsid \nРекомендуется Ubuntu 18+ " 
-[[ $release = Debian && ${vsid} -lt 10 ]] && yellow "Версия системы: Debian $vsid \nРекомендуется Debian 10+ "
+[[ $release = Centos && ${vsid} -lt 7 ]] && yellow "Текущая версия системы: Centos $vsid \nРекомендуется использовать Centos 7 и выше " 
+[[ $release = Ubuntu && ${vsid} -lt 18 ]] && yellow "Текущая версия системы: Ubuntu $vsid \nРекомендуется использовать Ubuntu 18 и выше " 
+[[ $release = Debian && ${vsid} -lt 10 ]] && yellow "Текущая версия системы: Debian $vsid \nРекомендуется использовать Debian 10 и выше "
 yellow "Подсказка:"
-red "Попробуйте Вариант 2 или 3"
-red "Или выберите ядро WARP-GO для установки (Вариант 1)"
+red "Возможно, вы можете использовать вариант 2 или вариант 3 для реализации WARP"
+red "Также можно выбрать ядро WARP-GO для установки WARP по варианту 1"
 exit
 else 
 green "ok"
@@ -1477,13 +1477,13 @@ fi
 echo | wgcf register
 until [[ -e wgcf-account.toml ]]
 do
-yellow "Регистрация Free аккаунта, если '429 Too Many Requests', ждите 30 сек..." && sleep 1
+yellow "Во время запроса обычного аккаунта warp может несколько раз появиться сообщение: 429 Too Many Requests, пожалуйста, подождите 30 секунд" && sleep 1
 echo | wgcf register --accept-tos
 done
 wgcf generate
 mtuwarp
 
-#blue "检测能否自动生成并使用warp+账户，请稍等10秒"
+#blue "Проверка возможности автоматически сгенерировать и использовать аккаунт warp+, пожалуйста, подождите 10 секунд"
 #wppluskey >/dev/null 2>&1
 sed -i "s/MTU.*/MTU = $MTU/g" wgcf-profile.conf
 cp -f wgcf-profile.conf /etc/wireguard/wgcf.conf >/dev/null 2>&1
@@ -1494,7 +1494,7 @@ mv -f wgcf-profile.conf /etc/wireguard >/dev/null 2>&1
 mv -f wgcf-account.toml /etc/wireguard >/dev/null 2>&1
 #ID=$(tail -n1 /root/WARP+Keys.txt | cut -d' ' -f1 2>/dev/null)
 #if [[ -n $ID ]]; then
-#green "使用warp+密钥"
+#green "Использовать warp+ ключ"
 #green "$(tail -n1 /root/WARP+Keys.txt | cut -d' ' -f1 2>/dev/null)"
 #sed -i "s/license_key.*/license_key = '$ID'/g" /etc/wireguard/wgcf-account.toml
 #sbmc=warp+$(date +%s%N |md5sum | cut -c 1-3)
@@ -1505,7 +1505,7 @@ mv -f wgcf-account.toml /etc/wireguard >/dev/null 2>&1
 #sed -i "2s#.*#$(sed -ne 2p /etc/wireguard/wgcf-profile.conf)#;4s#.*#$(sed -ne 4p /etc/wireguard/wgcf-profile.conf)#" /etc/wireguard/wgcf.conf
 #sed -i "2s#.*#$(sed -ne 2p /etc/wireguard/wgcf-profile.conf)#;4s#.*#$(sed -ne 4p /etc/wireguard/wgcf-profile.conf)#" /etc/wireguard/buckup-profile.conf
 #else
-#yellow "warp+无法自动生成，直接生成warp普通账户"
+#yellow "Не удалось автоматически сгенерировать warp+, будет создан обычный аккаунт warp"
 #fi
 systemctl enable wg-quick@wgcf
 cat /etc/wireguard/wgcf.conf && sleep 2
@@ -1515,11 +1515,11 @@ curl -sL https://raw.githubusercontent.com/yonggekkk/warp-yg/main/version | awk 
 
 WARPup(){
 backconf(){
-red "Ошибка обновления, возврат к Free аккаунту"
+red "Обновление не удалось, автоматически восстанавливается обычный аккаунт warp"
 sed -i "2s#.*#$(sed -ne 2p /etc/wireguard/wgcf-profile.conf)#;4s#.*#$(sed -ne 4p /etc/wireguard/wgcf-profile.conf)#" /etc/wireguard/wgcf.conf
 CheckWARP && ShowWGCF && WGCFmenu
 }
-readp "1. Teams (Командный)\n2. WARP+ Аккаунт\n3. Free (Обычный) WARP\n4. Socks5+WARP+ Аккаунт\n0. Назад\n Выберите：" cd
+readp "1. Командный аккаунт Teams\n2. Аккаунт warp+\n3. Обычный аккаунт warp\n4. Socks5+WARP+ аккаунт\n0. Вернуться на уровень выше\n Выберите:" cd
 case "$cd" in 
 1 )
 result(){
@@ -1528,18 +1528,18 @@ sed -i "s#PrivateKey.*#PrivateKey = $PRIVATEKEY#g;s#Address.*128#Address = $ADDR
 CheckWARP
 checkwgcf
 if [[ $wgcfv4 = plus || $wgcfv6 = plus ]]; then
-rm -rf /etc/wireguard/wgcf+p.log && green "Аккаунт wgcf-warp+Teams активирован" && ShowWGCF && WGCFmenu
+rm -rf /etc/wireguard/wgcf+p.log && green "Аккаунт wgcf-warp+Teams уже активирован" && ShowWGCF && WGCFmenu
 else
 backconf
 fi
 }
-[[ ! $(type -P wg-quick) ]] && red "wgcf-warp не установлен, установите для продолжения" && exit
-green "1. Использовать Token (Teams), получить тут: https://web--public--warp-team-api--coia-mfs4.code.run/"
-green "2. Вручную ввести PrivateKey и IPV6 Address"
+[[ ! $(type -P wg-quick) ]] && red "wgcf-warp не установлен, сначала установите wgcf-warp" && exit
+green "1. Использовать Token для получения командного аккаунта Teams, адрес для получения Token: https://web--public--warp-team-api--coia-mfs4.code.run/"
+green "2. Вручную скопировать приватный ключ и IPV6-адрес"
 green "0. Выход"
-readp "Выберите：" up
+readp "Выберите:" up
 if [[ $up == 1 ]]; then
-readp " Вставьте Teams Token： " TEAM_TOKEN
+readp " Скопируйте Token командного аккаунта: " TEAM_TOKEN
 PRIVATEKEY=$(wg genkey)
 PUBLICKEY=$(wg pubkey <<< "$PRIVATEKEY")
 INSTALL_ID=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
@@ -1548,9 +1548,9 @@ ERROR_TIMES=0
 while [ "$ERROR_TIMES" -le 3 ]; do
 (( ERROR_TIMES++ ))
 if [[ "$TEAMS" =~ 'token is expired' ]]; then
-read -p " Токен истек, обновите и введите снова: " TEAM_TOKEN
+read -p " Обновите token и вставьте заново " TEAM_TOKEN
 elif [[ "$TEAMS" =~ 'error' ]]; then
-read -p " Ошибка, обновите и введите снова: " TEAM_TOKEN
+read -p " Обновите token и вставьте заново " TEAM_TOKEN
 elif [[ "$TEAMS" =~ 'organization' ]]; then
 break
 fi
@@ -1564,8 +1564,8 @@ ADDRESS6=$(expr "$TEAMS" : '.*"v6":[ ]*"\([^"]*\).*')
 done
 result
 elif [[ $up == 2 ]]; then
-readp "Вставьте privateKey (44 символа)：" PRIVATEKEY
-readp "Вставьте IPV6 Address：" ADDRESS6
+readp "Скопируйте privateKey (44 символа):" PRIVATEKEY
+readp "Скопируйте IPV6 Address:" ADDRESS6
 result
 else
 exit
@@ -1578,19 +1578,19 @@ sed -i "s#PrivateKey.*#PrivateKey = $PRIVATEKEY#g;s#Address.*128#Address = $ADDR
 CheckWARP
 checkwgcf
 if [[ $wgcfv4 = plus || $wgcfv6 = plus ]]; then
-echo "Неизвестно" > /etc/wireguard/wgcf+p.log && green "Аккаунт wgcf-warp+ активирован" && ShowWGCF && WGCFmenu
+echo "Неизвестно" > /etc/wireguard/wgcf+p.log && green "Аккаунт wgcf-warp+ уже активирован" && ShowWGCF && WGCFmenu
 else
 fawgcf
 fi
 }
-[[ ! $(type -P wg-quick) ]] && red "wgcf-warp не установлен, установите для продолжения" && exit
-green "1. Ввод ключа лицензии"
-green "2. Вручную ввести PrivateKey и IPV6 Address"
+[[ ! $(type -P wg-quick) ]] && red "wgcf-warp не установлен, сначала установите wgcf-warp" && exit
+green "1. Ввести ключ"
+green "2. Вручную скопировать приватный ключ и IPV6-адрес"
 green "0. Выход"
-readp "Выберите：" up
+readp "Выберите:" up
 if [[ $up == 1 ]]; then
-readp "Вставьте ключ WARP+ (26 символов):" ID
-[[ -n $ID ]] && sed -i "s/license_key.*/license_key = '$ID'/g" /etc/wireguard/wgcf-account.toml && readp "Имя устройства (Enter = случайно)：" sbmc || (red "Не введен ключ (26 символов)" && cf)
+readp "Скопируйте лицензионный ключ из мобильного клиента WARP в статусе WARP+ или ключ из сетевого шаринга (26 символов):" ID
+[[ -n $ID ]] && sed -i "s/license_key.*/license_key = '$ID'/g" /etc/wireguard/wgcf-account.toml && readp "Переименовать устройство (Enter — случайное имя):" sbmc || (red "Лицензионный ключ не введён (26 символов)" && cf)
 [[ -n $sbmc ]] && SBID="--name $(echo $sbmc | sed s/[[:space:]]/_/g)"
 cd /etc/wireguard && wgcf update $SBID > /etc/wireguard/wgcf+p.log 2>&1
 wgcf generate && cd
@@ -1600,14 +1600,14 @@ CheckWARP && checkwgcf
 if [[ $wgcfv4 = plus || $wgcfv6 = plus ]]; then
 warppflow=$((`grep -oP '"quota":\K\d+' <<< $(curl -s "https://api.cloudflareclient.com/v0a884/reg/$(grep 'device_id' /etc/wireguard/wgcf-account.toml 2>/dev/null | cut -d \' -f2)" -H "User-Agent: okhttp/3.12.1" -H "Authorization: Bearer $(grep 'access_token' /etc/wireguard/wgcf-account.toml 2>/dev/null | cut -d \' -f2)")`))
 flow=`echo "scale=2; $warppflow/1000000000" | bc`
-green "Обновлено до wgcf-warp+\nИмя устройства: $(grep -s 'Device name' /etc/wireguard/wgcf+p.log | awk '{ print $NF }')\nОстаток трафика: $flow GB"
+green "Уже обновлено до аккаунта wgcf-warp+\nИмя устройства аккаунта wgcf-warp+: $(grep -s 'Device name' /etc/wireguard/wgcf+p.log | awk '{ print $NF }')\nОстаток трафика wgcf-warp+: $flow GB"
 ShowWGCF && WGCFmenu 
 else
-red "Ошибка обновления WARP+. Убедитесь, что ключ не превысил лимит устройств (5 шт)." && exit
+red "По результатам проверки IP обновление до warp+ не удалось. Убедитесь, что с этим ключом используется не более 5 устройств; рекомендуется заменить ключ и попробовать снова. Скрипт завершает работу" && exit
 fi
 elif [[ $up == 2 ]]; then
-readp "Вставьте privateKey (44 символа)：" PRIVATEKEY
-readp "Вставьте IPV6 Address：" ADDRESS6
+readp "Скопируйте privateKey (44 символа):" PRIVATEKEY
+readp "Скопируйте IPV6 Address:" ADDRESS6
 result
 else
 exit
@@ -1618,7 +1618,7 @@ checkwgcf
 if [[ $wgcfv4 = plus || $wgcfv6 = plus ]]; then
 fawgcf
 else
-yellow "Уже используется wgcf-warp Free"
+yellow "Сейчас уже используется обычный аккаунт wgcf-warp"
 ShowWGCF && WGCFmenu
 fi;;
 4 )
@@ -1628,8 +1628,8 @@ esac
 }
 
 WARPonoff(){
-[[ ! $(type -P wg-quick) ]] && red "WARP не установлен, переустановите" && exit
-readp "1. Выключить WARP (и мониторинг)\n2. Включить/Перезагрузить WARP (и мониторинг)\n0. Назад\n Выберите：" unwp
+[[ ! $(type -P wg-quick) ]] && red "WARP не установлен, рекомендуется установить заново" && exit
+readp "1. Выключить WARP (выключить онлайн-мониторинг WARP)\n2. Включить/перезапустить WARP (запустить онлайн-мониторинг WARP)\n0. Вернуться на уровень выше\n Выберите:" unwp
 if [ "$unwp" == "1" ]; then
 wg-quick down wgcf >/dev/null 2>&1
 systemctl stop wg-quick@wgcf >/dev/null 2>&1
@@ -1637,16 +1637,16 @@ systemctl disable wg-quick@wgcf >/dev/null 2>&1
 screen -ls | awk '/\.up/ {print $1}' | cut -d "." -f 1 | xargs kill 2>/dev/null
 unreswarp
 checkwgcf 
-[[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]] && green "WARP выключен" || red "Ошибка отключения"
+[[ ! $wgcfv4 =~ on|plus && ! $wgcfv6 =~ on|plus ]] && green "WARP успешно выключен" || red "Не удалось выключить WARP"
 elif [ "$unwp" == "2" ]; then
 wg-quick down wgcf >/dev/null 2>&1
 systemctl restart wg-quick@wgcf >/dev/null 2>&1
 xyz
 name=`screen -ls | grep '(Detached)' | awk '{print $1}' | awk -F "." '{print $2}'`
-[[ $name =~ "up" ]] && green "Мониторинг WARP запущен" || red "Ошибка запуска мониторинга"
+[[ $name =~ "up" ]] && green "Онлайн-мониторинг WARP успешно запущен" || red "Не удалось запустить онлайн-мониторинг WARP, проверьте, установлен ли screen"
 reswarp
 checkwgcf 
-[[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]] && green "WARP включен" || red "Ошибка включения"
+[[ $wgcfv4 =~ on|plus || $wgcfv6 =~ on|plus ]] && green "WARP успешно включён" || red "Не удалось включить WARP"
 else
 cf
 fi
@@ -1665,12 +1665,12 @@ rm -rf /root/warpip /root/WARP+Keys.txt
 }
 
 warpinscha(){
-yellow "Подсказка: Исходящий трафик VPS будет перехвачен WARP IP."
+yellow "Подсказка: локальный исходящий IP VPS будет заменён выбранным вами IP warp; если у VPS нет такого локального исходящего IP, будет сгенерирован другой IP warp"
 echo
-green "1. Установить/Сменить wgcf-warp IPv4 (По умолчанию)"
-green "2. Установить/Сменить wgcf-warp IPv6"
-green "3. Установить/Сменить wgcf-warp DualStack (v4+v6)"
-readp "\nВыберите：" wgcfwarp
+green "1. Установить/переключить wgcf-warp single-stack IPV4 (по умолчанию Enter)"
+green "2. Установить/переключить wgcf-warp single-stack IPV6"
+green "3. Установить/переключить wgcf-warp dual-stack IPV4+IPV6"
+readp "\nВыберите:" wgcfwarp
 if [ -z "${wgcfwarp}" ] || [ $wgcfwarp == "1" ];then
 WGCFv4
 elif [ $wgcfwarp == "2" ];then
@@ -1678,7 +1678,7 @@ WGCFv6
 elif [ $wgcfwarp == "3" ];then
 WGCFv4v6
 else 
-red "Ошибка ввода" && warpinscha
+red "Ошибка ввода, пожалуйста, выберите снова" && warpinscha
 fi
 echo
 }  
@@ -1698,29 +1698,29 @@ echo -e "${bblue}     ░██        ░${plain}██    ░██ ██    
 echo -e "${bblue}     ░██ ${plain}        ░██    ░░██        ░██ ░██       ░${red}██ ░██       ░██ ░██ ${plain}  "
 echo -e "${bblue}     ░█${plain}█          ░██ ██ ██         ░██  ░░${red}██     ░██  ░░██     ░██  ░░██ ${plain}  "
 echo
-white "Github проект  ：github.com/yonggekkk"
-white "Blogger блог   ：ygkkk.blogspot.com"
-white "YouTube канал  ：www.youtube.com/@ygkkk"
+white "Проект Yongge на Github ：github.com/yonggekkk"
+white "Блог Yongge на Blogger ：ygkkk.blogspot.com"
+white "Канал Yongge на YouTube ：www.youtube.com/@ygkkk"
 green "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-yellow " Выберите подходящий вариант WARP (Можно установить варианты 1, 2, 3 одновременно)"
-yellow " Быстрый запуск скрипта: cf"
+yellow " Выберите подходящий для себя вариант реализации warp (пункты 1, 2, 3; можно выбрать один или несколько одновременно)"
+yellow " Быстрый вход в скрипт：cf"
 white " ================================================================="
-green "  1. Вариант 1: Установка/Смена WGCF-WARP"
-green "  2. Вариант 2: Установка Socks5-WARP"
-green "  3. Вариант 3: Генерация конфига WARP-Wireguard (QR-код)"
-green "  4. Удаление WARP"
+green "  1. Вариант 1: установить/переключить WGCF-WARP"
+green "  2. Вариант 2: установить Socks5-WARP"
+green "  3. Вариант 3: сгенерировать файл конфигурации и QR-код WARP-Wireguard"
+green "  4. Удалить WARP"
 white " -----------------------------------------------------------------"
-green "  5. Вкл/Выкл/Перезапуск WARP"
-green "  6. Дополнительные опции WARP"
-green "  7. Смена аккаунта WARP (Free/Plus/Teams)"
-green "  8. Обновить скрипт CFwarp" 
-green "  9. Заменить ядро WGCF-WARP на WARP-GO"
-green "  0. Выход "
+green "  5. Выключить, включить/перезапустить WARP"
+green "  6. Другие опции WARP"
+green "  7. Обновить/переключить три типа аккаунтов WARP"
+green "  8. Обновить установочный скрипт CFwarp" 
+green "  9. Заменить текущее ядро WGCF-WARP на ядро WARP-GO"
+green "  0. Выйти из скрипта "
 red "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cfwarpshow
 red "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-white " Инфо о системе:"
-white " ОС: $(blue "$op") \c" && white " Ядро: $(blue "$version") \c" && white " CPU: $(blue "$cpu") \c" && white " Вирт.: $(blue "$vi")"
+white " Информация о системе VPS:"
+white " Операционная система: $(blue "$op") \c" && white " Версия ядра: $(blue "$version") \c" && white " Архитектура CPU : $(blue "$cpu") \c" && white " Тип виртуализации: $(blue "$vi")"
 WGCFmenu
 S5menu
 echo
@@ -1747,7 +1747,7 @@ fi
 
 checkyl(){
 if [ ! -f warp_update ]; then
-green "Первый запуск скрипта CFwarp-yg, установка зависимостей... ждите"
+green "Первый запуск скрипта CFwarp-yg, устанавливаются необходимые зависимости…… пожалуйста, подождите"
 if [[ $release = Centos && ${vsid} =~ 8 ]]; then
 cd /etc/yum.repos.d/ && mkdir backup && mv *repo backup/ 
 curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-8.repo
@@ -1806,12 +1806,12 @@ echo -e "${bblue}     ░██        ░${plain}██    ░██ ██    
 echo -e "${bblue}     ░██ ${plain}        ░██    ░░██        ░██ ░██       ░${red}██ ░██       ░██ ░██ ${plain}  "
 echo -e "${bblue}     ░█${plain}█          ░██ ██ ██         ░██  ░░${red}██     ░██  ░░██     ░██  ░░██ ${plain}  "
 echo
-white "Github проект  ：github.com/yonggekkk"
-white "Blogger блог   ：ygkkk.blogspot.com"
-white "YouTube канал  ：www.youtube.com/@ygkkk"
+white "Проект Yongge на Github ：github.com/yonggekkk"
+white "Блог Yongge на Blogger ：ygkkk.blogspot.com"
+white "Канал Yongge на YouTube ：www.youtube.com/@ygkkk"
 green "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 echo
-yellow "Подождите 5 сек, проверка разблокировки Netflix и ChatGPT"
+yellow "Подождите 5 секунд, выполняется проверка разблокировки Netflix и ChatGPT"
 echo
 echo
 v4v6
@@ -1819,16 +1819,16 @@ UA_Browser="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 if [[ -n $v6 ]]; then
 nonf=$(curl -s6 --user-agent "${UA_Browser}" http://ip-api.com/json/$v6?lang=zh-CN -k | cut -f2 -d"," | cut -f4 -d '"')
 nf6;chatgpt6;checkgpt
-v6Status=$(white "Адрес IPV6：\c" ; blue "$v6   $nonf" ; white " Netflix： \c" ; blue "$NF" ; white " ChatGPT： \c" ; blue "$chat")
+v6Status=$(white "IPV6-адрес：\c" ; blue "$v6   $nonf" ; white " Netflix： \c" ; blue "$NF" ; white " ChatGPT： \c" ; blue "$chat")
 else
-v6Status=$(white "Адрес IPV6：\c" ; red "Нет адреса IPv6")
+v6Status=$(white "IPV6-адрес：\c" ; red "IPV6-адрес отсутствует")
 fi
 if [[ -n $v4 ]]; then
 nonf=$(curl -s4 --user-agent "${UA_Browser}" http://ip-api.com/json/$v4?lang=zh-CN -k | cut -f2 -d"," | cut -f4 -d '"')
 nf4;chatgpt4;checkgpt
-v4Status=$(white "Адрес IPV4：\c" ; blue "$v4   $nonf" ; white " Netflix： \c" ; blue "$NF" ; white " ChatGPT： \c" ; blue "$chat")
+v4Status=$(white "IPV4-адрес：\c" ; blue "$v4   $nonf" ; white " Netflix： \c" ; blue "$NF" ; white " ChatGPT： \c" ; blue "$chat")
 else
-v4Status=$(white "Адрес IPV4：\c" ; red "Нет адреса IPv4")
+v4Status=$(white "IPV4-адрес：\c" ; red "IPV4-адрес отсутствует")
 fi
 echo "-----------------------------------------------------------------------"
 white " ${v4Status}"
@@ -1836,26 +1836,26 @@ echo "-----------------------------------------------------------------------"
 white " ${v6Status}"
 echo "-----------------------------------------------------------------------"
 echo
-yellow "Результаты выше показывают разблокировку с ЛОКАЛЬНОГО IP, а не через WARP"
+yellow "Выше показаны только результаты проверки разблокировки для локального IP, проверка разблокировки для маршрутизации WARP не выполняется"
 echo
 echo
 white "=================================================================="
-yellow " Инструкция к скрипту:"
-yellow " 1. Бесконечная генерация конфигов WARP-Wireguard (Пункт 1)"
-yellow "    Можно использовать для замены аккаунта в скриптах прокси или для своих нод"
+yellow " Инструкция по использованию warp-скрипта:"
+yellow " 1. Безлимитная генерация конфигурации WARP-Wireguard (пункт 1)"
+yellow " Можно использовать для смены исходящего аккаунта WARP-Wireguard в прокси-скриптах или для создания собственного узла"
 echo
-yellow " 2. Установка WARP (Пункты 2 и 3)"
-yellow "    Эффект: Шанс глобальной разблокировки Netflix и ChatGPT"
-yellow "    Совет: Если используете прокси-скрипт с поддержкой WARP, этот скрипт ставить не нужно"
-yellow "    Совет: wgcf и warp-go выбирайте любой, какой установится"
+yellow " 2. Установка WARP-скрипта (пункты 2 и 3)"
+yellow " Назначение: есть шанс глобально разблокировать Netflix и ChatGPT"
+yellow " Подсказка: если вы используете прокси-скрипт с поддержкой исходящего трафика через WARP, дополнительно устанавливать warp-скрипт не рекомендуется"
+yellow " Подсказка: можно выбирать wgcf или warp-go, устанавливайте то, что устанавливается"
 echo "-------------------------------------------------------------------"
-green " 1. Сгенерировать конфиг/QR-код WARP-Wireguard"
-green " 2. Меню установки через wgcf"
-green " 3. Меню установки через warp-go"
-green " 0. Выход"
+green " 1. Сгенерировать и извлечь файл конфигурации и QR-код узла WARP-Wireguard"
+green " 2. Выбрать вариант wgcf и перейти в меню установки WARP"
+green " 3. Выбрать вариант warp-go и перейти в меню установки WARP"
+green " 0. Выйти из скрипта"
 white "=================================================================="
 echo
-readp " Введите номер [0-3]:" Input
+readp " Введите номер【0-3】:" Input
 case "$Input" in
  1 ) WGproxy;;
  2 ) warpyl && ONEWGCFWARP;;
