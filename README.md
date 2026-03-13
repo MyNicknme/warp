@@ -13,5 +13,3 @@
 
 ```bash
 bash <(wget -qO- https://raw.githubusercontent.com/MyNicknme/warp/refs/heads/main/CFwarp.sh)
-
-
